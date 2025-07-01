@@ -70,8 +70,13 @@ const menus = [
     label: "Lobby",
     href: "/lobby",
   },
+  {
+    id: 3,
+    label: "Whitelist",
+    href: "/whitelist",
+  },
   // {
-  //   id: 3,
+  //   id: 4,
   //   label: "Profile",
   //   href: "/profile",
   // },
