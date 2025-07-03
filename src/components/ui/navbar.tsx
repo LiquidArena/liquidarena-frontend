@@ -2,7 +2,7 @@
 
 import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { Flag, Home, Swords, Trophy, User, Users } from "lucide-react";
+import { Flag, Swords, Trophy, User, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAccount, useAccountEffect } from "wagmi";

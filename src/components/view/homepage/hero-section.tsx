@@ -9,9 +9,9 @@ export default function HeroSection() {
   const { openConnectModal } = useConnectModal();
 
   return (
-    <section className="lg:max-h-[1080px] lg:py-20 p-6 lg:px-12 bg-gradient-to-b from-slate-900 via-gray-800 to-black">
+    <section className="relative lg:max-h-[1080px] lg:py-20 p-6 lg:px-12 bg-gradient-to-b from-slate-900 via-gray-800 to-black">
       <GridPatternBackground />
-      <div className="flex flex-col lg:flex-row lg:gap-6 items-center container max-w-6xl mx-auto">
+      <div className="relative flex flex-col lg:flex-row lg:gap-6 items-center container max-w-6xl mx-auto">
         <div className="lg:max-w-xl space-y-4">
           <div>
             <p className="italic">Stake. Predict. Conquer.</p>

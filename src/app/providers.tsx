@@ -7,9 +7,8 @@ import {
   QueryClientProvider,
   isServer,
 } from "@tanstack/react-query";
-import { WagmiProvider } from "wagmi";
-
-import { config } from "../../config";
+import { useEffect, useState } from "react";
+import { Config, WagmiProvider } from "wagmi";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -33,7 +32,16 @@ function getQueryClient() {
 }
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+  const [config, setConfig] = useState<Config | null>(null);
   const queryClient = getQueryClient();
+
+  useEffect(() => {
+    import("@/lib/config").then((m) => {
+      setConfig(m.config);
+    });
+  }, []);
+
+  if (!config) return null;
 
   return (
     <WagmiProvider config={config}>
