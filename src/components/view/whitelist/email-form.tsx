@@ -64,8 +64,8 @@ export const EmailForm: React.FC<EmailFormProps> = ({
 
   return (
     <div className={`max-w-3xl mx-auto ${className}`}>
-      <div className="grid grid-cols-6 gap-4 pb-4">
-        <div className="col-span-4 text-xl  ">
+      <div className="grid md:grid-cols-6 gap-4 pb-4">
+        <div className="md:col-span-4 text-xl  ">
           <Input
             type="email"
             placeholder={placeholder}
@@ -75,7 +75,7 @@ export const EmailForm: React.FC<EmailFormProps> = ({
             required
           />
         </div>
-        <div className="col-span-2">
+        <div className="md:col-span-2">
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting}
@@ -113,7 +113,7 @@ export const EmailForm: React.FC<EmailFormProps> = ({
 
         {message && (
           <div
-            className={`col-span-6 mt-4 text-center p-4 rounded-2xl backdrop-blur-xl border ${
+            className={`md:col-span-6 mt-4 text-center p-4 rounded-2xl backdrop-blur-xl border ${
               message.includes("Successfully")
                 ? "bg-green-500/10 border-green-400/30 text-green-300"
                 : "bg-red-500/10 border-red-400/30 text-red-300"

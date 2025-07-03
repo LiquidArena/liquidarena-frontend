@@ -37,7 +37,7 @@ export default function WhitelistPage() {
     <AnimatedBackground>
       <div className="px-6 py-20">
         <div className="max-w-7xl mx-auto mt-6">
-          <HeroHeader title="Be the First to Experience" subtitle="Waitlis" />
+          <HeroHeader title="Be the First" subtitle="LiquidArena" />
 
           <EmailForm
             onSubmit={handleEmailSubmit}

@@ -23,7 +23,7 @@ const Podium: React.FC<PodiumProps> = ({ users, isVisible }) => {
     switch (position) {
       case 1:
         return {
-          order: "order-2",
+          order: "order-1 lg:order-2",
           height: "h-56",
           gradient: "from-amber-500/20 to-amber-600/30",
           prizeColor: "text-amber-400",
@@ -32,7 +32,7 @@ const Podium: React.FC<PodiumProps> = ({ users, isVisible }) => {
         };
       case 2:
         return {
-          order: "order-1",
+          order: "order-2 lg:order-1",
           height: "h-40",
           gradient: "from-slate-500/20 to-slate-600/30",
           prizeColor: "text-slate-300",
@@ -69,7 +69,7 @@ const Podium: React.FC<PodiumProps> = ({ users, isVisible }) => {
   };
 
   return (
-    <div className="flex items-end justify-center gap-6 px-8 mb-8 mt-4">
+    <div className="flex items-center lg:items-end justify-center gap-6 px-8 mb-8 mt-4 flex-col lg:flex-row">
       {users.map((user, index) => {
         const styles = getPositionStyles(user.position);
         return (

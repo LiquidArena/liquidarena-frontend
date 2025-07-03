@@ -87,12 +87,11 @@ const Leaderboard: React.FC = () => {
         </div>
 
         <div
-          className="flex items-center justify-center p-4 relative z-10"
+          className="flex items-center justify-center p-4 relative z-10 py-12"
           style={{ transform: `translateY(${scrollY * 0.1}px)` }}
         >
           <div className="w-full max-w-5xl">
             <Podium users={topUsers} isVisible={isVisible} />
-
             <LeaderboardTable isVisible={isVisible} />
           </div>
         </div>

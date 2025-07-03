@@ -160,3 +160,7 @@
     @apply text-gray-300;
   }
 }
+
+@utility bg-gradient-primary {
+  @apply bg-gradient-to-b from-slate-900 via-gray-800 to-black;
+}
