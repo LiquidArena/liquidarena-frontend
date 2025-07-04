@@ -68,6 +68,21 @@ const Leaderboard: React.FC = () => {
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden relative pt-20 pb-36">
+        {/* Grid Pattern Background */}
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: "50px 50px",
+          }}
+        ></div>
+
+        {/* Radial Gradient Overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.1),transparent_50%)]"></div>
+
         <div className="absolute inset-0 overflow-hidden">
           {/* Moving gradient orbs */}
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full filter blur-3xl animate-backgroundMove animate-pulseGlow"></div>
