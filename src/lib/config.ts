@@ -1,4 +1,5 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { cookieStorage, createStorage, http } from "wagmi";
 import { Chain } from "wagmi/chains";
 
 const monadTestnet: Chain = {
@@ -27,8 +28,14 @@ const monadTestnet: Chain = {
 };
 
 export const config = getDefaultConfig({
-  appName: "Simple DEX",
+  appName: "LiquidArena",
   projectId: process.env.NEXT_PUBLIC_REOWN_WALLET_PROJECT_ID!,
   chains: [monadTestnet],
+  storage: createStorage({
+    storage: cookieStorage,
+  }),
+  transports: {
+    [monadTestnet.id]: http(),
+  },
   ssr: true,
 });
