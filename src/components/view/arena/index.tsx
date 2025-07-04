@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import GradientLine from "@/components/ui/cards/gradient-line";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { GradientLink } from "@/components/ui/gradient-button";
+import GridPatternBackground from "@/components/ui/grid-pattern-background";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -33,7 +36,6 @@ import {
   Coins,
   Plus,
   Search,
-  Shield,
   Sword,
   Target,
   TrendingUp,
@@ -67,16 +69,7 @@ export default function ArenaLobby() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.1),transparent_50%)]"></div>
 
       {/* Grid Pattern */}
-      <div
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px)
-          `,
-          backgroundSize: "50px 50px",
-        }}
-      ></div>
+      <GridPatternBackground />
 
       {/* Header */}
       <div className="relative z-10 container mx-auto px-6 py-12">
@@ -137,7 +130,7 @@ export default function ArenaLobby() {
 
         {/* Controls */}
         <div className="mb-8 flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
+          <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
               <Input
@@ -295,23 +288,23 @@ export default function ArenaLobby() {
 
         {/* Battle Tabs */}
         <Tabs defaultValue="all" className="mb-8">
-          <TabsList className="bg-gray-900/50 border border-gray-700 rounded-2xl p-2 backdrop-blur-sm min-h-14">
+          <TabsList className="bg-gray-900/50 border border-gray-700 rounded-2xl p-2 backdrop-blur-sm min-h-14 flex-col md:flex-row md:w-fit w-full h-full">
             <TabsTrigger
               value="all"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
+              className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
             >
               All Battles ({filteredBattles.length})
             </TabsTrigger>
             <TabsTrigger
               value="waiting"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
+              className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
             >
               Waiting (
               {filteredBattles.filter((b) => b.status === "waiting").length})
             </TabsTrigger>
             <TabsTrigger
               value="active"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
+              className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
             >
               Active (
               {filteredBattles.filter((b) => b.status === "active").length})
@@ -345,7 +338,7 @@ function BattleGrid({ battles }: { battles: typeof mockBattleRooms }) {
           key={battle.id}
           className="relative bg-gray-900/50 hover:border-cyan-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/20 backdrop-blur-sm rounded-2xl overflow-hidden group"
         >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
+          <GradientLine />
           <CardHeader className="pb-4 relative">
             <div className="flex items-center justify-between mb-4">
               <CardTitle className="text-xl font-bold text-white flex items-center">
@@ -436,27 +429,13 @@ function BattleGrid({ battles }: { battles: typeof mockBattleRooms }) {
                 <div className="w-1 h-1 bg-gray-500 rounded-full mr-2"></div>
                 {battle.createdAt}
               </span>
-              <Button
-                size="sm"
-                className={`px-6 py-2 rounded-xl font-semibold transition-all duration-300 ${
-                  battle.status === "waiting"
-                    ? "bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40"
-                    : "bg-gray-700 hover:bg-gray-600 text-gray-300"
-                }`}
+              <GradientLink
                 disabled={battle.status === "active"}
+                href={`/arena/battle/${battle.id}`}
               >
-                {battle.status === "waiting" ? (
-                  <>
-                    <Sword className="w-4 h-4 mr-2" />
-                    Join Battle
-                  </>
-                ) : (
-                  <>
-                    <Shield className="w-4 h-4 mr-2" />
-                    In Progress
-                  </>
-                )}
-              </Button>
+                <Sword className="w-4 h-4" />
+                Join
+              </GradientLink>
             </div>
           </CardContent>
         </Card>
