@@ -4,9 +4,22 @@ import { Button } from "@/components/ui/button";
 import GridPatternBackground from "@/components/ui/grid-pattern-background";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAccount } from "wagmi";
 
 export default function HeroSection() {
+  const router = useRouter();
   const { openConnectModal } = useConnectModal();
+  const { address } = useAccount();
+
+  const handleButtonAction = () => {
+    if (!address) {
+      openConnectModal?.();
+      return;
+    }
+
+    return router.push("/arena");
+  };
 
   return (
     <section className="relative lg:max-h-[1080px] lg:py-20 p-6 lg:px-12 bg-gradient-to-b from-slate-900 via-gray-800 to-black">
@@ -25,7 +38,7 @@ export default function HeroSection() {
             and win both LPs. No luck, just skill.
           </p>
           <Button
-            onClick={openConnectModal}
+            onClick={handleButtonAction}
             className="bg-gradient-to-r from-slate-700 to-gray-800 py-5 text-white hover:scale-105 transition-all duration-300 ease-in-out"
           >
             🔥Enter The Arena

@@ -1,5 +1,6 @@
 "use client";
 
+import CustomAvatar from "@/components/ui/custom-avatar";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import {
@@ -47,6 +48,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
+          avatar={CustomAvatar}
           theme={darkTheme({
             overlayBlur: "small",
           })}

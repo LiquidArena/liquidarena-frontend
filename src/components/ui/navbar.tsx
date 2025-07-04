@@ -20,7 +20,7 @@ export default function Navbar() {
       return;
     }
 
-    return push("/lobby");
+    return push("/arena");
   };
 
   useAccountEffect({
@@ -92,8 +92,8 @@ const menus = [
   },
   {
     id: 2,
-    label: "Lobby",
-    href: "/lobby",
+    label: "Arena",
+    href: "/arena",
     requireAuth: false,
     icon: Users,
   },
