@@ -1,22 +1,7 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import GradientLine from "@/components/ui/cards/gradient-line";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { GradientLink } from "@/components/ui/gradient-button";
 import GridPatternBackground from "@/components/ui/grid-pattern-background";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -25,16 +10,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { CreateBattleButton } from "@/components/battle/create-battle-dialog";
+import { BattleIntegrationTest } from "@/components/test/battle-integration-test";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import GradientLine from "@/components/ui/cards/gradient-line";
+import { GradientLink } from "@/components/ui/gradient-button";
 import {
   mockBattleRooms,
-  mockLPNFTS,
-  mockTimeWindows,
 } from "@/mocks/battle-arena/create-battle";
 import {
   Activity,
   Clock,
   Coins,
-  Plus,
   Search,
   Sword,
   Target,
@@ -47,20 +36,9 @@ export default function ArenaLobby() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPair, setFilterPair] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  const filteredBattles = mockBattleRooms.filter((battle) => {
-    const matchesSearch =
-      battle.hostPool.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      battle.hostPool.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPair =
-      filterPair === "all" ||
-      battle.hostPool.includes(filterPair.toUpperCase());
-    const matchesStatus =
-      filterStatus === "all" || battle.status === filterStatus;
-
-    return matchesSearch && matchesPair && matchesStatus;
-  });
+  // Note: Filtering logic can be removed since we're using the new BattleList component
+  // which handles its own filtering and data fetching
 
   return (
     <section className="min-h-screen bg-black relative overflow-hidden py-24">
@@ -165,163 +143,48 @@ export default function ArenaLobby() {
             </Select>
           </div>
 
-          <Dialog
-            open={isCreateDialogOpen}
-            onOpenChange={setIsCreateDialogOpen}
-          >
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white h-12 px-8 rounded-xl font-semibold shadow-lg shadow-cyan-500/25 transition-all duration-300 hover:shadow-cyan-500/40">
-                <Plus className="w-5 h-5 mr-2" />
-                Create Battle
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-gray-900/95 border-gray-700 text-white backdrop-blur-xl max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                  Create New Battle
-                </DialogTitle>
-                <DialogDescription asChild>
-                  <div className="bg-yellow-900/20 border-yellow-400/30 text-yellow-400 p-2 rounded-lg">
-                    Only players with LP tokens of equivalent value can join
-                    your battle. Choose your stake carefully as it determines
-                    who can challenge you.
-                  </div>
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="pair" className="text-gray-300 font-medium">
-                    Trading Pair
-                  </Label>
-                  <Select>
-                    <SelectTrigger className="bg-gray-800 border-gray-600 mt-2 h-12 py-5 rounded-xl w-full">
-                      <SelectValue placeholder="Select trading pair" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
-                      {mockLPNFTS.map((lpNFT) => (
-                        <SelectItem key={lpNFT.value} value={lpNFT.id}>
-                          {lpNFT.pool} ({lpNFT.value})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label
-                    htmlFor="timeframe"
-                    className="text-gray-300 font-medium"
-                  >
-                    Battle Duration
-                  </Label>
-                  <Select>
-                    <SelectTrigger className="bg-gray-800 border-gray-600 mt-2 h-12 py-5 rounded-xl w-full">
-                      <SelectValue placeholder="Select duration" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
-                      {mockTimeWindows.map((timeWindow) => (
-                        <SelectItem
-                          key={timeWindow.value}
-                          value={timeWindow.value}
-                        >
-                          {timeWindow.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label
-                      htmlFor="min-price"
-                      className="text-gray-300 font-medium"
-                    >
-                      Min Price ($)
-                    </Label>
-                    <Input
-                      id="min-price"
-                      placeholder="0.00"
-                      className="bg-gray-800 border-gray-600 mt-2 h-12 rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="max-price"
-                      className="text-gray-300 font-medium"
-                    >
-                      Max Price ($)
-                    </Label>
-                    <Input
-                      id="max-price"
-                      placeholder="0.00"
-                      className="bg-gray-800 border-gray-600 mt-2 h-12 rounded-xl"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-start space-x-2">
-                    <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="text-sm text-gray-300">
-                      <strong className="text-white">Instant Loss:</strong>{" "}
-                      First player to go outside their price range loses
-                      immediately
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="text-sm text-gray-300">
-                      <strong className="text-white">Time Expiry:</strong> If no
-                      one exits range, winner determined by biggest percentage
-                      gain
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 h-12 rounded-xl font-semibold text-white">
-                  <Sword className="w-5 h-5 mr-2" />
-                  Launch Battle
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <CreateBattleButton />
         </div>
 
-        {/* Battle Tabs */}
+        {/* Integration Test */}
+        <div className="mb-12">
+          <BattleIntegrationTest />
+        </div>
+
+        {/* Battle Tabs - Using Mock Data */}
         <Tabs defaultValue="all" className="mb-8">
           <TabsList className="bg-gray-900/50 border border-gray-700 rounded-2xl p-2 backdrop-blur-sm min-h-14 flex-col md:flex-row md:w-fit w-full h-full">
             <TabsTrigger
               value="all"
               className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
             >
-              All Battles ({filteredBattles.length})
+              All Battles ({mockBattleRooms.length})
             </TabsTrigger>
             <TabsTrigger
               value="waiting"
               className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
             >
-              Waiting (
-              {filteredBattles.filter((b) => b.status === "waiting").length})
+              Waiting ({mockBattleRooms.filter((b) => b.status === "waiting").length})
             </TabsTrigger>
             <TabsTrigger
               value="active"
               className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
             >
-              Active (
-              {filteredBattles.filter((b) => b.status === "active").length})
+              Active ({mockBattleRooms.filter((b) => b.status === "active").length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-8">
-            <BattleGrid battles={filteredBattles} />
+            <BattleGrid battles={mockBattleRooms} />
           </TabsContent>
           <TabsContent value="waiting" className="mt-8">
             <BattleGrid
-              battles={filteredBattles.filter((b) => b.status === "waiting")}
+              battles={mockBattleRooms.filter((b) => b.status === "waiting")}
             />
           </TabsContent>
           <TabsContent value="active" className="mt-8">
             <BattleGrid
-              battles={filteredBattles.filter((b) => b.status === "active")}
+              battles={mockBattleRooms.filter((b) => b.status === "active")}
             />
           </TabsContent>
         </Tabs>
@@ -356,21 +219,6 @@ function BattleGrid({ battles }: { battles: typeof mockBattleRooms }) {
               >
                 {battle.status === "active" ? "🔥 LIVE" : "⏳ WAITING"}
               </Badge>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-                <span className="text-gray-400">Multiplier:</span>
-                {/* <span className="text-cyan-400 font-bold">
-                  {battle.multiplier}
-                </span> */}
-              </div>
-              {/* <div className="text-gray-400">
-                Vol:{" "}
-                <span className="text-purple-400 font-semibold">
-                  {battle.volume}
-                </span>
-              </div> */}
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -414,15 +262,6 @@ function BattleGrid({ battles }: { battles: typeof mockBattleRooms }) {
                 </p>
               </div>
             </div>
-
-            {/* <div className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 rounded-xl p-4 border border-gray-700/30">
-              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">
-                Price Range
-              </p>
-              <p className="text-white font-mono text-lg font-bold">
-                {battle.priceRange}
-              </p>
-            </div> */}
 
             <div className="flex items-center justify-between pt-4 border-t border-gray-700/30">
               <span className="text-xs text-gray-500 flex items-center">

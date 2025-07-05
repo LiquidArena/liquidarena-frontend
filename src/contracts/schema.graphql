@@ -23,6 +23,14 @@ type LPBattleVault_BattleResolved {
   resolverReward: BigInt!
 }
 
+type LPBattleVault_BattleStatusChanged {
+  id: ID!
+  battleId: BigInt!
+  previousStatus: String!
+  newStatus: String!
+  timestamp: BigInt!
+}
+
 type LPBattleVault_ContractPausedByOwner {
   id: ID!
   by: String!
@@ -49,6 +57,14 @@ type LPBattleVault_OwnershipTransferred {
 type LPBattleVault_Paused {
   id: ID!
   account: String!
+}
+
+type LPBattleVault_PlayerOutOfRange {
+  id: ID!
+  battleId: BigInt!
+  player: String!
+  isCreator: Boolean!
+  timestamp: BigInt!
 }
 
 type LPBattleVault_PriceFeedSet {
@@ -88,6 +104,23 @@ type LPFeeBattle_BattleResolved {
   winner: String!
 }
 
+type LPFeeBattle_BattleStatusChanged {
+  id: ID!
+  battleId: BigInt!
+  previousStatus: String!
+  newStatus: String!
+  timestamp: BigInt!
+}
+
+type LPFeeBattle_FeePerformanceUpdate {
+  id: ID!
+  battleId: BigInt!
+  player: String!
+  feeGrowthUSD: BigInt!
+  feeRate: BigInt!
+  isCreator: Boolean!
+}
+
 type LPFeeBattle_OwnershipTransferred {
   id: ID!
   previousOwner: String!
@@ -115,3 +148,4 @@ type LPFeeBattle_Unpaused {
   id: ID!
   account: String!
 }
+
