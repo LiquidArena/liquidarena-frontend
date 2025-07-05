@@ -1,5 +1,11 @@
 "use client";
 
+import { CreateBattleButton } from "@/components/battle/create-battle-dialog";
+import { BattleIntegrationTest } from "@/components/test/battle-integration-test";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import GradientLine from "@/components/ui/cards/gradient-line";
+import { GradientLink } from "@/components/ui/gradient-button";
 import GridPatternBackground from "@/components/ui/grid-pattern-background";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,16 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-import { CreateBattleButton } from "@/components/battle/create-battle-dialog";
-import { BattleIntegrationTest } from "@/components/test/battle-integration-test";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import GradientLine from "@/components/ui/cards/gradient-line";
-import { GradientLink } from "@/components/ui/gradient-button";
-import {
-  mockBattleRooms,
-} from "@/mocks/battle-arena/create-battle";
+import { useListOfBattles } from "@/hooks/use-battle-data";
+import { mockBattleRooms } from "@/mocks/battle-arena/create-battle";
 import {
   Activity,
   Clock,
@@ -39,6 +37,10 @@ export default function ArenaLobby() {
 
   // Note: Filtering logic can be removed since we're using the new BattleList component
   // which handles its own filtering and data fetching
+
+  const { data } = useListOfBattles();
+
+  console.log(data);
 
   return (
     <section className="min-h-screen bg-black relative overflow-hidden py-24">
@@ -164,13 +166,15 @@ export default function ArenaLobby() {
               value="waiting"
               className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
             >
-              Waiting ({mockBattleRooms.filter((b) => b.status === "waiting").length})
+              Waiting (
+              {mockBattleRooms.filter((b) => b.status === "waiting").length})
             </TabsTrigger>
             <TabsTrigger
               value="active"
               className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
             >
-              Active ({mockBattleRooms.filter((b) => b.status === "active").length})
+              Active (
+              {mockBattleRooms.filter((b) => b.status === "active").length})
             </TabsTrigger>
           </TabsList>
 
