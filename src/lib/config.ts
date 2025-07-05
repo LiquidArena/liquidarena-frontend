@@ -1,41 +1,19 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { cookieStorage, createStorage, http } from "wagmi";
-import { Chain } from "wagmi/chains";
-
-const monadTestnet: Chain = {
-  id: 10143,
-  name: "Monad Testnet",
-  nativeCurrency: {
-    decimals: 18,
-    name: "MON",
-    symbol: "MON",
-  },
-  rpcUrls: {
-    default: {
-      http: ["https://testnet-rpc.monad.xyz/"],
-    },
-    public: {
-      http: ["https://testnet-rpc.monad.xyz/"],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "MonadScan",
-      url: "https://testnet.monadexplorer.com",
-    },
-  },
-  testnet: true,
-};
+import { MONAD_TESTNET } from "./contracts";
 
 export const config = getDefaultConfig({
   appName: "LiquidArena",
   projectId: process.env.NEXT_PUBLIC_REOWN_WALLET_PROJECT_ID!,
-  chains: [monadTestnet],
+  chains: [MONAD_TESTNET],
   storage: createStorage({
     storage: cookieStorage,
   }),
   transports: {
-    [monadTestnet.id]: http(),
+    [MONAD_TESTNET.id]: http(),
   },
   ssr: true,
 });
+
+// Re-export contracts for convenience
+export { CONTRACTS } from "./contracts";
