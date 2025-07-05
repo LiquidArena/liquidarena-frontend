@@ -163,10 +163,10 @@ export default function ProfileSection() {
                   key={index}
                   isWinner={item?.details?.winner === address}
                   amount={parseFloat(
-                    formatUnits(item?.details?.usdValue!, 18),
+                    formatUnits(item?.details?.usdValue as bigint, 18),
                   ).toFixed(2)}
                   opponentAddress={`${opponentAddres?.slice(0, 3) as string}...${opponentAddres?.slice(opponentAddres?.length - 4)}`}
-                  status={item?.details?.status!}
+                  status={item?.details?.status as string}
                 />
               );
             })}
