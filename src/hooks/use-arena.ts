@@ -17,7 +17,9 @@ export const useArena = () => {
   // Extract battle IDs for status fetching
   const battleIds = useMemo(() => {
     return (
-      data?.LPBattleVault_BattleCreated?.map((battle) => battle.battleId) || []
+      data?.LPBattleVault_BattleCreated?.map((battle) =>
+        battle.battleId.toString(),
+      ) || []
     );
   }, [data]);
 
@@ -35,12 +37,12 @@ export const useArena = () => {
 
     return data.LPBattleVault_BattleCreated.map((battle) => ({
       id: battle.id,
-      battleId: battle.battleId,
+      battleId: battle.battleId.toString(),
       creator: battle.creator,
-      creatorTokenId: battle.creatorTokenId,
-      duration: battle.duration,
-      totalValueUSD: battle.totalValueUSD,
-      status: statusMap[battle.battleId] || "queued",
+      creatorTokenId: battle.creatorTokenId.toString(),
+      duration: battle.duration.toString(),
+      totalValueUSD: battle.totalValueUSD.toString(),
+      status: statusMap[battle.battleId.toString()] || "queued",
       createdAt: "Recently",
     }));
   }, [data, statusMap]);

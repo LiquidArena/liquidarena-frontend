@@ -3,7 +3,8 @@ import { ContractBattleStatus } from "@/types/arena";
 import { useReadContracts } from "wagmi";
 
 // Correct contract address for LPBattleVault
-const BATTLE_CONTRACT_ADDRESS = "0x78f4f7A63C9a4f2d75749209d6EBf133464cb9e6";
+const BATTLE_CONTRACT_ADDRESS =
+  "0x78f4f7A63C9a4f2d75749209d6EBf133464cb9e6" as const;
 
 // Use getBattleDetails function from the contract ABI to get status
 const BATTLE_STATUS_ABI = [
@@ -53,9 +54,9 @@ const isZeroAddress = (address: string): boolean => {
 
 export const useMultipleBattleStatus = (battleIds: string[]) => {
   const contracts = battleIds.map((battleId) => ({
-    address: BATTLE_CONTRACT_ADDRESS,
+    address: BATTLE_CONTRACT_ADDRESS as `0x${string}`,
     abi: BATTLE_STATUS_ABI,
-    functionName: "getBattleDetails",
+    functionName: "getBattleDetails" as const,
     args: [BigInt(battleId)],
   }));
 
@@ -70,7 +71,11 @@ export const useMultipleBattleStatus = (battleIds: string[]) => {
   const statusMap = battleIds.reduce(
     (acc, battleId, index) => {
       const result = results?.[index];
-      if (result?.status === "success" && result.result) {
+      if (
+        result?.status === "success" &&
+        result.result &&
+        Array.isArray(result.result)
+      ) {
         // result.result is an array: [creator, opponent, usdValue, winner, status]
         const statusString = result.result[4] as string;
         acc[battleId] = mapContractStatusToString(statusString);
@@ -86,7 +91,11 @@ export const useMultipleBattleStatus = (battleIds: string[]) => {
   const opponentMap = battleIds.reduce(
     (acc, battleId, index) => {
       const result = results?.[index];
-      if (result?.status === "success" && result.result) {
+      if (
+        result?.status === "success" &&
+        result.result &&
+        Array.isArray(result.result)
+      ) {
         // opponent is at index 1
         const opponent = result.result[1] as string;
         acc[battleId] = opponent;
