@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useListOfBattles } from "@/hooks/use-battle-data";
 import {
   mockBattleRooms,
   mockLPNFTS,
@@ -61,6 +62,10 @@ export default function ArenaLobby() {
 
     return matchesSearch && matchesPair && matchesStatus;
   });
+
+  const { data } = useListOfBattles();
+
+  console.log(data);
 
   return (
     <section className="min-h-screen bg-black relative overflow-hidden py-24">
