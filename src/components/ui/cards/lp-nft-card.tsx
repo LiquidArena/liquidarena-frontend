@@ -10,7 +10,7 @@ export default function LPNFTCard({
 }: {
   pairs: string;
   value: string;
-  isActive: boolean;
+  isActive?: boolean;
 }) {
   return (
     <div className="flex gap-4 items-center py-2 px-4 bg-slate-600/10 w-full rounded-2xl hover:shadow-lg transition-all duration-300 ease-in-out">
@@ -21,14 +21,14 @@ export default function LPNFTCard({
         <p>{pairs}</p>
         <span className="text-sm">{value}</span>
       </div>
-      <Badge
+      {/* <Badge
         className={cn("ml-auto", {
           "bg-green-200 text-green-600": isActive,
           "bg-orange-200 text-orange-600": !isActive,
         })}
       >
         {isActive ? "active" : "in-battle"}
-      </Badge>
+      </Badge> */}
     </div>
   );
 }

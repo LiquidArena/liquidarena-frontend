@@ -3,16 +3,59 @@
 import ArchOrnament from "@/components/ui/arch-ornament";
 import { Badge } from "@/components/ui/badge";
 import LPNFTCard from "@/components/ui/cards/lp-nft-card";
-import RecentBattleCard from "@/components/ui/cards/recent-battle-card";
+import RecentBattleCard, {
+  RecentBattleCardSkeleton,
+} from "@/components/ui/cards/recent-battle-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import StatsCard from "@/components/ui/stats-card";
-import { mockRecentBattles, mockStats, mocklpNFTs } from "@/mocks/user-profile";
+import { useUserLPPositions } from "@/hooks/use-lp-positions";
+import { useRecentBattles } from "@/hooks/use-profile-data";
+import { Percent, Skull, Swords, Trophy } from "lucide-react";
+import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 
 /* eslint-disable @next/next/no-img-element */
 
 export default function ProfileSection() {
   const { address, isConnected, chain, chainId } = useAccount();
+
+  const {
+    battles: recentBattles,
+    stats: profileStats,
+    isLoading: isRecentBattleLoading,
+  } = useRecentBattles({
+    userAddress: address!,
+  });
+
+  const { positions: availableLPNFTS, isLoading: isLPPositionsLoading } =
+    useUserLPPositions();
+
+  const stats = [
+    {
+      id: 1,
+      title: "Win Rates",
+      value: String(profileStats?.winRate) + "%",
+      icon: Percent,
+    },
+    {
+      id: 2,
+      title: "Total Battles",
+      value: String(profileStats?.totalBattles),
+      icon: Swords,
+    },
+    {
+      id: 3,
+      title: "Total Wins",
+      value: String(profileStats?.wonBattles),
+      icon: Trophy,
+    },
+    {
+      id: 4,
+      title: "Total Loses",
+      value: String(profileStats?.lostBattles),
+      icon: Skull,
+    },
+  ];
 
   return (
     <div className="lg:max-h-[500px] flex flex-col lg:flex-row gap-6 container max-w-6xl mx-auto">
@@ -36,15 +79,23 @@ export default function ProfileSection() {
           <div className="w-full text-center lg:text-start lg:w-1/2 space-y-2">
             <div>
               <h2>ADDRESS:</h2>
-              <p>
-                {address?.slice(0, 6).toUpperCase()}...{address?.slice(-4)}
-              </p>
+              {isConnected ? (
+                <p>
+                  {address?.slice(0, 6).toUpperCase()}...{address?.slice(-4)}
+                </p>
+              ) : (
+                <div className="w-full h-6 bg-gray-200/10 animate-pulse rounded-lg" />
+              )}
             </div>
             <div>
               <h2>CHAIN: </h2>
-              <p>
-                {chain?.name} | {chainId}
-              </p>
+              {isConnected ? (
+                <p>
+                  {chain?.name} | {chainId}
+                </p>
+              ) : (
+                <div className="w-full h-6 bg-gray-200/10 animate-pulse rounded-lg" />
+              )}
             </div>
             <Badge className="bg-green-200">ONLINE</Badge>
           </div>
@@ -52,14 +103,21 @@ export default function ProfileSection() {
 
         <h2>STATISTICS</h2>
         <div className="grid md:grid-cols-2 gap-2">
-          {mockStats.map((stat, i) => (
-            <StatsCard
-              key={i}
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-            />
-          ))}
+          {isRecentBattleLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-full h-full px-2 py-8 bg-gray-900/30 animate-pulse rounded-lg"
+                />
+              ))
+            : stats?.map((stat, i) => (
+                <StatsCard
+                  key={i}
+                  title={stat.title}
+                  value={stat.value!}
+                  icon={stat.icon}
+                />
+              ))}
         </div>
         <ArchOrnament position="top" direction="left" />
       </div>
@@ -71,14 +129,16 @@ export default function ProfileSection() {
         <h2 className="text-xl bg-gradient-to-r from-transparent via-gray-100/10 py-6 to-transparent">
           ACTIVE LP NFTs
         </h2>
-        {mocklpNFTs.length > 0 ? (
+        {isLPPositionsLoading ? (
+          <RecentBattleCardSkeleton />
+        ) : availableLPNFTS.length > 0 ? (
           <ScrollArea className="min-h-0 h-full max-h-[calc(50%-6.5rem)] [&>div>div]:space-y-4">
-            {mocklpNFTs.map((lpNFT, i) => (
+            {availableLPNFTS?.map((lpNFT, i) => (
               <LPNFTCard
                 key={i}
-                pairs={lpNFT.pairs}
-                value={lpNFT.value}
-                isActive={lpNFT.isActive}
+                pairs={lpNFT.poolName!}
+                value={lpNFT.valueUSD}
+                // isActive={lpNFT.}
               />
             ))}
           </ScrollArea>
@@ -91,17 +151,25 @@ export default function ProfileSection() {
         <h2 className="text-xl text-end bg-gradient-to-r from-transparent via-gray-100/10 py-6 to-transparent">
           RECENT BATTLES
         </h2>
-        {mockRecentBattles.length > 0 ? (
+        {isRecentBattleLoading ? (
+          <RecentBattleCardSkeleton />
+        ) : recentBattles.length > 0 ? (
           <ScrollArea className="min-h-0 h-full max-h-[calc(50%-6.5rem)] [&>div>div]:space-y-4">
-            {mockRecentBattles.map((item, index) => (
-              <RecentBattleCard
-                key={index}
-                isWinner={item.isWinner}
-                amount={item.amount}
-                opponentAddress={item.opponentAddress}
-                timeStamp={item.timeStamp}
-              />
-            ))}
+            {recentBattles.map((item, index) => {
+              const opponentAddres = item?.details?.opponent;
+
+              return (
+                <RecentBattleCard
+                  key={index}
+                  isWinner={item?.details?.winner === address}
+                  amount={parseFloat(
+                    formatUnits(item?.details?.usdValue!, 18),
+                  ).toFixed(2)}
+                  opponentAddress={`${opponentAddres?.slice(0, 3) as string}...${opponentAddres?.slice(opponentAddres?.length - 4)}`}
+                  status={item?.details?.status!}
+                />
+              );
+            })}
           </ScrollArea>
         ) : (
           <div className="flex items-center justify-center min-h-0 h-full max-h-[calc(50%-6.5rem)] py-4">

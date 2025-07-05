@@ -4,7 +4,7 @@ export default function StatsCard({
   icon: Icon,
 }: {
   title: string;
-  value: number;
+  value: string;
   icon: React.ComponentType<React.ComponentProps<"svg">>;
 }) {
   return (

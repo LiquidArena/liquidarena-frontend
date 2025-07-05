@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAccount, useDisconnect, useSignMessage } from "wagmi";
 
@@ -8,6 +9,8 @@ export function useWalletAuth() {
   const { disconnectAsync } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
   const [isLoading, setIsLoading] = useState(false);
+
+  const { push } = useRouter();
 
   const signIn = async (address?: string) => {
     if (!addressClient && !address) throw new Error("Wallet not connected");
@@ -46,7 +49,8 @@ export function useWalletAuth() {
     });
 
     // refresh();
-    window.location.reload();
+    // window.location.reload();
+    push("/");
   };
 
   return { signIn, signOut, isLoading };
