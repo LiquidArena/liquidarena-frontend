@@ -16,31 +16,35 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useListOfBattles } from "@/hooks/use-battle-data";
-import { mockBattleRooms } from "@/mocks/battle-arena/create-battle";
+import { useArena } from "@/hooks/use-arena";
+import { BattleData } from "@/types/arena";
+import { formatAddress, formatDuration, formatUSDValue } from "@/utils/arena";
 import {
   Activity,
   Clock,
   Coins,
+  Loader2,
   Search,
   Sword,
   Target,
   TrendingUp,
   Users,
 } from "lucide-react";
-import { useState } from "react";
 
 export default function ArenaLobby() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterPair, setFilterPair] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
-
-  // Note: Filtering logic can be removed since we're using the new BattleList component
-  // which handles its own filtering and data fetching
-
-  const { data } = useListOfBattles();
-
-  console.log(data);
+  const {
+    battles,
+    stats,
+    isLoading,
+    error,
+    playerCountMap,
+    searchTerm,
+    setSearchTerm,
+    filterStatus,
+    setFilterStatus,
+    isCreateDialogOpen,
+    setIsCreateDialogOpen,
+  } = useArena();
 
   return (
     <section className="min-h-screen bg-black relative overflow-hidden py-24">
@@ -73,8 +77,10 @@ export default function ArenaLobby() {
                 Active Battles
               </span>
             </div>
-            <div className="text-2xl font-bold text-white">24</div>
-            <div className="text-xs text-green-400">+12% from yesterday</div>
+            <div className="text-2xl font-bold text-white">
+              {stats.onGoingBattles}
+            </div>
+            <div className="text-xs text-green-400">Live battles ongoing</div>
           </div>
           <div className="bg-gradient-to-br from-gray-900/50 to-black/50 border border-purple-500/20 rounded-2xl p-6 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-2">
@@ -83,28 +89,34 @@ export default function ArenaLobby() {
                 Total Volume
               </span>
             </div>
-            <div className="text-2xl font-bold text-white">1,247 ETH</div>
-            <div className="text-xs text-green-400">+8.3% this week</div>
+            <div className="text-2xl font-bold text-white">
+              ${stats.totalVolume.toFixed(2)}
+            </div>
+            <div className="text-xs text-green-400">Total staked value</div>
           </div>
           <div className="bg-gradient-to-br from-gray-900/50 to-black/50 border border-pink-500/20 rounded-2xl p-6 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-2">
               <Users className="w-5 h-5 text-pink-400" />
               <span className="text-xs text-gray-400 uppercase tracking-wide">
-                Active Players
+                Total Battles
               </span>
             </div>
-            <div className="text-2xl font-bold text-white">892</div>
-            <div className="text-xs text-green-400">+15% growth</div>
+            <div className="text-2xl font-bold text-white">
+              {stats.totalBattles}
+            </div>
+            <div className="text-xs text-green-400">All time created</div>
           </div>
           <div className="bg-gradient-to-br from-gray-900/50 to-black/50 border border-yellow-500/20 rounded-2xl p-6 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-2">
               <Coins className="w-5 h-5 text-yellow-400" />
               <span className="text-xs text-gray-400 uppercase tracking-wide">
-                Avg Multiplier
+                Waiting
               </span>
             </div>
-            <div className="text-2xl font-bold text-white">2.4x</div>
-            <div className="text-xs text-cyan-400">High risk, high reward</div>
+            <div className="text-2xl font-bold text-white">
+              {stats.queuedBattles}
+            </div>
+            <div className="text-xs text-cyan-400">Ready to join</div>
           </div>
         </div>
 
@@ -120,19 +132,6 @@ export default function ArenaLobby() {
                 className="pl-12 bg-gray-900/50 border-gray-700 text-white placeholder-gray-400 w-full sm:w-80 h-12 rounded-xl backdrop-blur-sm focus:border-cyan-500 transition-all duration-300"
               />
             </div>
-            <Select value={filterPair} onValueChange={setFilterPair}>
-              <SelectTrigger className="bg-gray-900/50 border-gray-700 text-white w-full sm:w-48 rounded-xl backdrop-blur-sm h-12 py-6">
-                <SelectValue placeholder="All Trading Pairs" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-gray-700 backdrop-blur-xl">
-                <SelectItem value="all">All Pairs</SelectItem>
-                {mockBattleRooms.map(({ hostPool, id }) => (
-                  <SelectItem key={id} value={hostPool}>
-                    {hostPool}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="bg-gray-900/50 border-gray-700 text-white w-full sm:w-48 rounded-xl backdrop-blur-sm h-12 py-6">
                 <SelectValue placeholder="All Status" />
@@ -153,136 +152,216 @@ export default function ArenaLobby() {
           <BattleIntegrationTest />
         </div>
 
-        {/* Battle Tabs - Using Mock Data */}
-        <Tabs defaultValue="all" className="mb-8">
-          <TabsList className="bg-gray-900/50 border border-gray-700 rounded-2xl p-2 backdrop-blur-sm min-h-14 flex-col md:flex-row md:w-fit w-full h-full">
-            <TabsTrigger
-              value="all"
-              className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
-            >
-              All Battles ({mockBattleRooms.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="waiting"
-              className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
-            >
-              Waiting (
-              {mockBattleRooms.filter((b) => b.status === "waiting").length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="active"
-              className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
-            >
-              Active (
-              {mockBattleRooms.filter((b) => b.status === "active").length})
-            </TabsTrigger>
-          </TabsList>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+            <span className="ml-2 text-gray-400">
+              Loading battles from GraphQL...
+            </span>
+          </div>
+        )}
 
-          <TabsContent value="all" className="mt-8">
-            <BattleGrid battles={mockBattleRooms} />
-          </TabsContent>
-          <TabsContent value="waiting" className="mt-8">
-            <BattleGrid
-              battles={mockBattleRooms.filter((b) => b.status === "waiting")}
-            />
-          </TabsContent>
-          <TabsContent value="active" className="mt-8">
-            <BattleGrid
-              battles={mockBattleRooms.filter((b) => b.status === "active")}
-            />
-          </TabsContent>
-        </Tabs>
+        {/* Battle Tabs */}
+        {!isLoading && (
+          <Tabs defaultValue="all" className="mb-8">
+            <TabsList className="bg-gray-900/50 border border-gray-700 rounded-2xl p-2 backdrop-blur-sm min-h-14 flex-col md:flex-row md:w-fit w-full h-full">
+              <TabsTrigger
+                value="all"
+                className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
+              >
+                All Battles ({battles.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="waiting"
+                className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg px-6 py-3 font-medium transition-all duration-300"
+              >
+                Waiting ({battles.filter((b) => b.status === "queued").length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="mt-8">
+              <BattleGrid battles={battles} playerCountMap={playerCountMap} />
+            </TabsContent>
+            <TabsContent value="waiting" className="mt-8">
+              <BattleGrid
+                battles={battles.filter((b) => b.status === "queued")}
+                playerCountMap={playerCountMap}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && battles.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Sword className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              No battles found
+            </h3>
+            <p className="text-gray-400 mb-6">
+              No battles were loaded from the GraphQL endpoint.
+            </p>
+            <CreateBattleButton />
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-function BattleGrid({ battles }: { battles: typeof mockBattleRooms }) {
+// Helper function to get battle status styling
+function getBattleStatusBadge(status: string) {
+  switch (status.toLowerCase()) {
+    case "queued":
+      return {
+        className: "bg-gradient-to-r from-yellow-500 to-orange-600",
+        icon: "⏳",
+        text: "QUEUED",
+      };
+    case "ongoing":
+    case "onGoing":
+      return {
+        className: "bg-gradient-to-r from-green-500 to-emerald-600",
+        icon: "⚔️",
+        text: "ONGOING",
+      };
+    case "readytoresolve":
+    case "readyToResolve":
+      return {
+        className: "bg-gradient-to-r from-blue-500 to-indigo-600",
+        icon: "⚡",
+        text: "READY TO RESOLVE",
+      };
+    case "ended":
+      return {
+        className: "bg-gradient-to-r from-gray-500 to-slate-600",
+        icon: "🏁",
+        text: "ENDED",
+      };
+    default:
+      return {
+        className: "bg-gradient-to-r from-yellow-500 to-orange-600",
+        icon: "⏳",
+        text: "QUEUED",
+      };
+  }
+}
+
+function BattleGrid({
+  battles,
+  playerCountMap,
+}: {
+  battles: BattleData[];
+  playerCountMap: Record<
+    string,
+    {
+      current: number;
+      max: number;
+      hasOpponent: boolean;
+      opponent: string | null;
+    }
+  >;
+}) {
+  if (battles.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-400">No battles available for this filter.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-      {battles.map((battle) => (
-        <Card
-          key={battle.id}
-          className="relative bg-gray-900/50 hover:border-cyan-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/20 backdrop-blur-sm rounded-2xl overflow-hidden group"
-        >
-          <GradientLine />
-          <CardHeader className="pb-4 relative">
-            <div className="flex items-center justify-between mb-4">
-              <CardTitle className="text-xl font-bold text-white flex items-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-lg flex items-center justify-center mr-3">
-                  <Target className="w-4 h-4 text-black" />
+      {battles.map((battle) => {
+        const statusBadge = getBattleStatusBadge(battle.status);
+        const playerCount = playerCountMap[battle.battleId] || {
+          current: 1,
+          max: 2,
+          hasOpponent: false,
+          opponent: null,
+        };
+        return (
+          <Card
+            key={battle.id}
+            className="relative bg-gray-900/50 hover:border-cyan-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/20 backdrop-blur-sm rounded-2xl overflow-hidden group"
+          >
+            <GradientLine />
+            <CardHeader className="pb-4 relative">
+              <div className="flex items-center justify-between mb-4">
+                <CardTitle className="text-xl font-bold text-white flex items-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-lg flex items-center justify-center mr-3">
+                    <Target className="w-4 h-4 text-black" />
+                  </div>
+                  Battle #{battle.battleId}
+                </CardTitle>
+                <Badge
+                  className={`px-3 py-1 rounded-full font-semibold text-xs text-white ${statusBadge.className}`}
+                >
+                  {statusBadge.icon} {statusBadge.text}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider">
+                    Creator
+                  </p>
+                  <p className="text-white font-mono text-sm bg-gray-800/50 px-2 py-1 rounded-lg">
+                    {formatAddress(battle.creator)}
+                  </p>
                 </div>
-                {battle.hostPool}
-              </CardTitle>
-              <Badge
-                className={`px-3 py-1 rounded-full font-semibold text-xs ${
-                  battle.status === "active"
-                    ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white"
-                    : "bg-gradient-to-r from-yellow-500 to-orange-600 text-white"
-                }`}
-              >
-                {battle.status === "active" ? "🔥 LIVE" : "⏳ WAITING"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <p className="text-xs text-gray-400 uppercase tracking-wider">
-                  Host
-                </p>
-                <p className="text-white font-mono text-sm bg-gray-800/50 px-2 py-1 rounded-lg">
-                  {battle.host}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider">
+                    Total Value
+                  </p>
+                  <p className="text-cyan-400 font-bold flex items-center text-lg">
+                    <Coins className="w-4 h-4 mr-1" />$
+                    {formatUSDValue(battle.totalValueUSD)}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-xs text-gray-400 uppercase tracking-wider">
-                  Stake
-                </p>
-                <p className="text-cyan-400 font-bold flex items-center text-lg">
-                  <Coins className="w-4 h-4 mr-1" />
-                  {battle.stake}
-                </p>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <p className="text-xs text-gray-400 uppercase tracking-wider">
-                  Duration
-                </p>
-                <p className="text-white flex items-center">
-                  <Clock className="w-4 h-4 mr-2 text-purple-400" />
-                  {battle.timeWindow}
-                </p>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider">
+                    Duration
+                  </p>
+                  <p className="text-white flex items-center">
+                    <Clock className="w-4 h-4 mr-2 text-purple-400" />
+                    {formatDuration(battle.duration)}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider">
+                    Players
+                  </p>
+                  <p className="text-white flex items-center">
+                    <Users
+                      className={`w-4 h-4 mr-2 ${playerCount.hasOpponent ? "text-green-400" : "text-pink-400"}`}
+                    />
+                    {playerCount.current}/{playerCount.max}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-xs text-gray-400 uppercase tracking-wider">
-                  Players
-                </p>
-                <p className="text-white flex items-center">
-                  <Users className="w-4 h-4 mr-2 text-pink-400" />
-                  {battle.participants}/{battle.maxParticipants}
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-gray-700/30">
-              <span className="text-xs text-gray-500 flex items-center">
-                <div className="w-1 h-1 bg-gray-500 rounded-full mr-2"></div>
-                {battle.createdAt}
-              </span>
-              <GradientLink
-                disabled={battle.status === "active"}
-                href={`/arena/battle/${battle.id}`}
-              >
-                <Sword className="w-4 h-4" />
-                Join
-              </GradientLink>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-700/30">
+                <span className="text-xs text-gray-500 flex items-center">
+                  <div className="w-1 h-1 bg-gray-500 rounded-full mr-2"></div>
+                  {battle.createdAt}
+                </span>
+                <GradientLink href={`/arena/battle/${battle.battleId}`}>
+                  <Sword className="w-4 h-4" />
+                  {playerCount.hasOpponent ? "View" : "Join"}
+                </GradientLink>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

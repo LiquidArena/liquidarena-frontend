@@ -21,14 +21,14 @@ export const useListOfBattles = ({
     queryKey: ["battles", { limit }],
     queryFn: async (): Promise<BattlesData> => {
       try {
-        const response = await graphqlClient.request<GetAllBattlesResponse>(
+        const response = await graphqlClient.request<BattlesData>(
           GET_ALL_BATTLES,
           { limit },
         );
 
-        // Ensure we always return a defined value
+        // GraphQL response is directly the data, not nested under response.data
         return (
-          response?.data ?? {
+          response ?? {
             LPBattleVault_BattleCreated: [],
             LPFeeBattle_BattleCreated: [],
           }
