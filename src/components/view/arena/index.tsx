@@ -5,7 +5,7 @@ import { BattleIntegrationTest } from "@/components/test/battle-integration-test
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import GradientLine from "@/components/ui/cards/gradient-line";
-import { GradientLink } from "@/components/ui/gradient-button";
+import { GradientButton, GradientLink } from "@/components/ui/gradient-button";
 import GridPatternBackground from "@/components/ui/grid-pattern-background";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,12 +17,14 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useArena } from "@/hooks/use-arena";
+import { useResolveBattle } from "@/hooks/use-resolve-battle";
 import { BattleData } from "@/types/arena";
 import { formatAddress, formatDuration, formatUSDValue } from "@/utils/arena";
 import {
   Activity,
   Clock,
   Coins,
+  Eye,
   Loader2,
   Search,
   Sword,
@@ -45,6 +47,19 @@ export default function ArenaLobby() {
     isCreateDialogOpen,
     setIsCreateDialogOpen,
   } = useArena();
+
+  const formatTotalVolume = (value: number) => {
+    if (!value) return;
+
+    return (
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        notation: "compact", // 'compact' gives you K, M, B, T
+        maximumFractionDigits: 1,
+      }).format(value) || 0
+    );
+  };
 
   return (
     <section className="min-h-screen bg-black relative overflow-hidden py-24">
@@ -90,7 +105,7 @@ export default function ArenaLobby() {
               </span>
             </div>
             <div className="text-2xl font-bold text-white">
-              ${stats.totalVolume.toFixed(2)}
+              {formatTotalVolume(stats.totalVolume)}
             </div>
             <div className="text-xs text-green-400">Total staked value</div>
           </div>
@@ -148,9 +163,9 @@ export default function ArenaLobby() {
         </div>
 
         {/* Integration Test */}
-        <div className="mb-12">
+        {/* <div className="mb-12">
           <BattleIntegrationTest />
-        </div>
+        </div> */}
 
         {/* Loading State */}
         {isLoading && (
@@ -221,26 +236,28 @@ function getBattleStatusBadge(status: string) {
         icon: "⏳",
         text: "QUEUED",
       };
-    case "ongoing":
+
     case "onGoing":
       return {
         className: "bg-gradient-to-r from-green-500 to-emerald-600",
         icon: "⚔️",
         text: "ONGOING",
       };
-    case "readytoresolve":
+
     case "readyToResolve":
       return {
         className: "bg-gradient-to-r from-blue-500 to-indigo-600",
         icon: "⚡",
         text: "READY TO RESOLVE",
       };
+
     case "ended":
       return {
         className: "bg-gradient-to-r from-gray-500 to-slate-600",
         icon: "🏁",
         text: "ENDED",
       };
+
     default:
       return {
         className: "bg-gradient-to-r from-yellow-500 to-orange-600",
@@ -265,6 +282,19 @@ function BattleGrid({
     }
   >;
 }) {
+  const {
+    resolveBattle,
+    isResolving,
+    // isSuccess: resolveSuccess,
+    // error: resolveError,
+  } = useResolveBattle();
+
+  const handleResolveBattle = async (battleId: string) => {
+    if (battleId) {
+      await resolveBattle(battleId, "range");
+    }
+  };
+
   if (battles.length === 0) {
     return (
       <div className="text-center py-8">
@@ -272,6 +302,8 @@ function BattleGrid({
       </div>
     );
   }
+
+  // console.log(battles);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -353,10 +385,29 @@ function BattleGrid({
                   <div className="w-1 h-1 bg-gray-500 rounded-full mr-2"></div>
                   {battle.createdAt}
                 </span>
-                <GradientLink href={`/arena/battle/${battle.battleId}`}>
-                  <Sword className="w-4 h-4" />
-                  {playerCount.hasOpponent ? "View" : "Join"}
-                </GradientLink>
+                {battle.status === "readyToResolve" ? (
+                  <GradientButton
+                    disabled={isResolving}
+                    className="bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                    onClick={() => handleResolveBattle(battle.battleId)}
+                  >
+                    Resolve Battle
+                  </GradientButton>
+                ) : (
+                  <GradientLink href={`/arena/battle/${battle.battleId}`}>
+                    {playerCount.hasOpponent ? (
+                      <>
+                        <Sword className="w-4 h-4" />
+                        Join
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-4 h-4" />
+                        Watch
+                      </>
+                    )}
+                  </GradientLink>
+                )}
               </div>
             </CardContent>
           </Card>

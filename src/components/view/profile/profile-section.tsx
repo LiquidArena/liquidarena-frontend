@@ -10,8 +10,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import StatsCard from "@/components/ui/stats-card";
 import { useUserLPPositions } from "@/hooks/use-lp-positions";
 import { useRecentBattles } from "@/hooks/use-profile-data";
+import { formatUSDValue } from "@/utils/arena";
 import { Percent, Skull, Swords, Trophy } from "lucide-react";
-import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 
 /* eslint-disable @next/next/no-img-element */
@@ -162,9 +162,7 @@ export default function ProfileSection() {
                 <RecentBattleCard
                   key={index}
                   isWinner={item?.details?.winner === address}
-                  amount={parseFloat(
-                    formatUnits(item?.details?.usdValue as bigint, 18),
-                  ).toFixed(2)}
+                  amount={formatUSDValue(String(item?.details?.usdValue))}
                   opponentAddress={`${opponentAddres?.slice(0, 3) as string}...${opponentAddres?.slice(opponentAddres?.length - 4)}`}
                   status={item?.details?.status as string}
                 />

@@ -35,7 +35,7 @@ export const useCompleteBattleDetails = (battleId: string | undefined) => {
   });
 
   // Convert the contract response to our BattleDetails interface
-  const battleDetails: BattleDetails | null = 
+  const battleDetails: BattleDetails | null =
     battleData && Array.isArray(battleData)
       ? {
           creator: battleData[0] as string,
@@ -50,7 +50,7 @@ export const useCompleteBattleDetails = (battleId: string | undefined) => {
           status: battleData[9] as string,
           creatorInRange: battleData[10] as boolean,
           opponentInRange: battleData[11] as boolean,
-          currentTick: Number(battleData[12] as bigint),
+          currentTick: Number(battleData[12] as unknown as bigint),
         }
       : null;
 
