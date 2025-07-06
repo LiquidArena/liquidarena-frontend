@@ -3,6 +3,7 @@
 import { CreateBattleButton } from "@/components/battle/create-battle-dialog";
 import { BattleIntegrationTest } from "@/components/test/battle-integration-test";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import GradientLine from "@/components/ui/cards/gradient-line";
 import { GradientButton, GradientLink } from "@/components/ui/gradient-button";
@@ -32,6 +33,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function ArenaLobby() {
   const {
@@ -393,20 +395,18 @@ function BattleGrid({
                   >
                     Resolve Battle
                   </GradientButton>
-                ) : (
+                ) : !playerCount?.hasOpponent ? (
                   <GradientLink href={`/arena/battle/${battle.battleId}`}>
-                    {playerCount.hasOpponent ? (
-                      <>
-                        <Sword className="w-4 h-4" />
-                        Join
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="w-4 h-4" />
-                        Watch
-                      </>
-                    )}
+                    <Sword className="w-4 h-4" />
+                    Join
                   </GradientLink>
+                ) : (
+                  <Link href={`/arena/battle/${battle.battleId}`}>
+                    <Button variant={"outline"} className="py-6">
+                      <Eye className="w-4 h-4" />
+                      View
+                    </Button>
+                  </Link>
                 )}
               </div>
             </CardContent>
