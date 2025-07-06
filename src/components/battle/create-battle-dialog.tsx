@@ -29,6 +29,8 @@ import {
   type CreateBattleParams
 } from "@/hooks/use-create-battle";
 import { useCreateBattleWithApproval } from "@/hooks/use-create-battle-with-approval";
+import { useLPPositionUSDValue } from "@/hooks/use-lp-usd-value";
+import type { LPPosition } from "@/lib/lp-position-service";
 import {
   Sword,
   Clock,
@@ -48,6 +50,130 @@ interface CreateBattleDialogProps {
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+}
+
+// Component to display selected position details with USD value
+function SelectedPositionDetails({ position }: { position: LPPosition }) {
+  const { usdValue, isLoading } = useLPPositionUSDValue(position.tokenId);
+
+  const getUSDDisplay = () => {
+    if (isLoading) return "Loading...";
+    
+    if (usdValue && usdValue.valueUSD !== "0") {
+      const rawValue = parseFloat(usdValue.valueUSD);
+      const divisors = [1, 1e3, 1e6, 1e9, 1e12, 1e15, 1e18, 1e21, 1e24, 1e27, 1e30];
+      
+      for (const divisor of divisors) {
+        const testValue = rawValue / divisor;
+        if (testValue >= 0.1 && testValue <= 10) {
+          return `$${testValue.toFixed(2)}`;
+        }
+      }
+      return `$${(rawValue / 1e30).toFixed(2)}`;
+    }
+    return "$0.00";
+  };
+
+  return (
+    <Card className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 border border-gray-700/50 rounded-xl overflow-hidden">
+      <CardContent className="p-6">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <Zap className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h4 className="text-white font-semibold">Selected Position</h4>
+            <p className="text-gray-400 text-sm">Ready for battle</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-gray-900/30 rounded-lg p-3">
+            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Pool</div>
+            <div className="text-white font-medium">{position.poolName}</div>
+          </div>
+          <div className="bg-gray-900/30 rounded-lg p-3">
+            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">USD Value</div>
+            <div className="text-green-400 font-bold">{getUSDDisplay()}</div>
+          </div>
+          <div className="bg-gray-900/30 rounded-lg p-3">
+            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Fee Tier</div>
+            <div className="text-purple-400 font-medium">{position.fee / 10000}%</div>
+          </div>
+          <div className="bg-gray-900/30 rounded-lg p-3">
+            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Token ID</div>
+            <div className="text-white font-mono">#{position.tokenId}</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Component to display position with USD value
+function PositionSelectItem({ position }: { position: any }) {
+  const { usdValue, isLoading, error, isConnected, isOwner } = useLPPositionUSDValue(position.tokenId);
+
+  // Convert USD value using the same logic as LPPositionCard
+  const getUSDDisplay = () => {
+    if (!isConnected) return "Connect Wallet";
+    if (isOwner === false) return "Not Owned";
+    if (isLoading) return "Loading...";
+    if (error) return "Error";
+    
+    if (usdValue && usdValue.valueUSD !== "0") {
+      const rawValue = parseFloat(usdValue.valueUSD);
+      
+      // Try different divisors to find reasonable USD values
+      const divisors = [1, 1e3, 1e6, 1e9, 1e12, 1e15, 1e18, 1e21, 1e24, 1e27, 1e30];
+      
+      for (const divisor of divisors) {
+        const testValue = rawValue / divisor;
+        if (testValue >= 0.1 && testValue <= 10) {
+          return `$${testValue.toFixed(2)}`;
+        }
+      }
+      
+      // Fallback
+      return `$${(rawValue / 1e30).toFixed(2)}`;
+    }
+    
+    return "$0.00";
+  };
+
+  const usdDisplay = getUSDDisplay();
+
+  return (
+    <div className="flex items-center justify-between w-full py-2">
+      <div className="flex items-center space-x-3">
+        <div className="w-8 h-8 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 rounded-lg flex items-center justify-center">
+          <Coins className="w-4 h-4 text-cyan-400" />
+        </div>
+        <div>
+          <span className="font-medium text-white">
+            {position.poolName || `${position.token0Symbol}/${position.token1Symbol}`}
+          </span>
+          <div className="text-xs text-gray-400">
+            Token #{position.tokenId} • {(position.fee / 10000)}% Fee
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center space-x-2">
+        <Badge
+          variant="secondary"
+          className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border-green-500/30"
+        >
+          {usdDisplay}
+        </Badge>
+        <Badge
+          variant="secondary"
+          className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border-green-500/30"
+        >
+          🔥 Active
+        </Badge>
+      </div>
+    </div>
+  );
 }
 
 export function CreateBattleDialog({ trigger, open, onOpenChange }: CreateBattleDialogProps) {
@@ -297,40 +423,15 @@ export function CreateBattleDialog({ trigger, open, onOpenChange }: CreateBattle
                       <SelectValue placeholder="🎯 Choose your LP position" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800/95 border border-gray-700/50 backdrop-blur-xl rounded-xl">
-                      {positions.map((position) => {
-                        const liquidity = BigInt(position.liquidity || '0');
-                        const liquidityFormatted = liquidity > 0n ?
-                          `${(Number(liquidity) / 1e18).toFixed(2)}` : '0';
-                        return (
-                          <SelectItem
-                            key={position.tokenId}
-                            value={position.tokenId}
-                            className="hover:bg-gray-700/50 rounded-lg my-1 cursor-pointer"
-                          >
-                            <div className="flex items-center justify-between w-full py-2">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 rounded-lg flex items-center justify-center">
-                                  <Coins className="w-4 h-4 text-cyan-400" />
-                                </div>
-                                <div>
-                                  <span className="font-medium text-white">
-                                    {position.poolName || `${position.token0Symbol}/${position.token1Symbol}`}
-                                  </span>
-                                  <div className="text-xs text-gray-400">
-                                    Token #{position.tokenId} • {(position.fee / 10000)}% Fee
-                                  </div>
-                                </div>
-                              </div>
-                              <Badge
-                                variant="secondary"
-                                className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border-green-500/30"
-                              >
-                                🔥 Active
-                              </Badge>
-                            </div>
-                          </SelectItem>
-                        );
-                      })}
+                      {positions.map((position) => (
+                        <SelectItem
+                          key={position.tokenId}
+                          value={position.tokenId}
+                          className="hover:bg-gray-700/50 rounded-lg my-1 cursor-pointer"
+                        >
+                          <PositionSelectItem position={position} />
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
 
@@ -342,43 +443,7 @@ export function CreateBattleDialog({ trigger, open, onOpenChange }: CreateBattle
             </div>
 
             {/* Selected Position Details */}
-            {selectedPosition && (
-              <Card className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 border border-gray-700/50 rounded-xl overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-xl flex items-center justify-center">
-                      <Zap className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-semibold">Selected Position</h4>
-                      <p className="text-gray-400 text-sm">Ready for battle</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-900/30 rounded-lg p-3">
-                      <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Pool</div>
-                      <div className="text-white font-medium">{selectedPosition.poolName}</div>
-                    </div>
-                    <div className="bg-gray-900/30 rounded-lg p-3">
-                      <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Status</div>
-                      <div className="text-green-400 font-bold flex items-center space-x-1">
-                        <span>🔥</span>
-                        <span>Active</span>
-                      </div>
-                    </div>
-                    <div className="bg-gray-900/30 rounded-lg p-3">
-                      <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Fee Tier</div>
-                      <div className="text-purple-400 font-medium">{selectedPosition.fee / 10000}%</div>
-                    </div>
-                    <div className="bg-gray-900/30 rounded-lg p-3">
-                      <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Token ID</div>
-                      <div className="text-white font-mono">#{selectedPosition.tokenId}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {selectedPosition && <SelectedPositionDetails position={selectedPosition} />}
 
             {/* Duration Selection */}
             <div className="space-y-4">

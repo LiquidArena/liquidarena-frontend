@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         console.warn(`Failed to fetch token1 symbol for ${token1}:`, error);
       }
 
-      // Format the position data
+      // Format the position data (USD values will be fetched by frontend hook)
       const position = {
         tokenId: tokenId.toString(),
         token0: token0 as Address,
@@ -85,9 +85,9 @@ export async function POST(request: NextRequest) {
         tickLower: Number(tickLower),
         tickUpper: Number(tickUpper),
         liquidity: (liquidity as bigint).toString(),
-        amount0: "0", // Position Manager doesn't provide current amounts directly
-        amount1: "0", // Position Manager doesn't provide current amounts directly
-        valueUSD: "0", // Would need price oracle to calculate USD value
+        amount0: "0", // Will be populated by frontend hook
+        amount1: "0", // Will be populated by frontend hook
+        valueUSD: "0", // Will be populated by frontend hook
         fees0: (tokensOwed0 as bigint).toString(), // Use tokensOwed as uncollected fees
         fees1: (tokensOwed1 as bigint).toString(), // Use tokensOwed as uncollected fees
         token0Symbol,

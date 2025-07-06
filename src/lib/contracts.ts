@@ -23,10 +23,10 @@ export const MONAD_TESTNET: Chain = {
   },
   rpcUrls: {
     default: {
-      http: ["https://testnet-rpc.monad.xyz/"],
+      http: ["https://rpc.ankr.com/monad_testnet"],
     },
     public: {
-      http: ["https://testnet-rpc.monad.xyz/"],
+      http: ["https://rpc.ankr.com/monad_testnet"],
     },
   },
   blockExplorers: {

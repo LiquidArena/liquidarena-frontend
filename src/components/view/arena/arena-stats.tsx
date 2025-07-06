@@ -14,12 +14,15 @@ interface ArenaStatsProps {
 
 export const ArenaStats: React.FC<ArenaStatsProps> = ({ stats }) => {
   const formatVolume = (volume: number) => {
-    if (volume >= 1000000) {
-      return `$${(volume / 1000000).toFixed(2)}M`;
-    } else if (volume >= 1000) {
-      return `$${(volume / 1000).toFixed(2)}K`;
+    // First, parse the large contract value using 1e30 divisor (like other USD values)
+    const parsedVolume = volume / 1e30;
+    
+    if (parsedVolume >= 1000000) {
+      return `$${(parsedVolume / 1000000).toFixed(2)}M`;
+    } else if (parsedVolume >= 1000) {
+      return `$${(parsedVolume / 1000).toFixed(2)}K`;
     }
-    return `$${volume.toFixed(2)}`;
+    return `$${parsedVolume.toFixed(2)}`;
   };
 
   const statItems = [

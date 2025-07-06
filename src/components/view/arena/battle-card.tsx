@@ -1,54 +1,138 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import GradientLine from "@/components/ui/cards/gradient-line";
 import { GradientLink } from "@/components/ui/gradient-button";
 import { BattleData, ContractBattleStatus } from "@/types/arena";
 import { formatAddress, formatDuration, formatUSDValue } from "@/utils/arena";
-import { Clock, Coins, Sword, Target, Users } from "lucide-react";
+import { Clock, Coins, Sword, Target, Users, Loader2, Gavel } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React from "react";
+import { useResolveBattle } from "@/hooks/use-resolve-battle";
+import { useCompleteBattleDetails } from "@/hooks/use-battle-contract";
 
 interface BattleCardProps {
   battle: BattleData;
 }
 
+// Utility function to check if battle has expired
+const isBattleExpired = (startTime: number, duration: number): boolean => {
+  if (!startTime || !duration) return false;
+  const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+  const endTime = startTime + duration;
+  return currentTime >= endTime;
+};
+
 // Helper function to get badge styling and text
-const getBattleStatusDisplay = (status: ContractBattleStatus) => {
+const getBattleStatusDisplay = (
+  status: ContractBattleStatus | string, 
+  isExpired: boolean = false
+) => {
+  // If battle is expired but still active, show ready to resolve
+  if (isExpired && (status === "active" || status === "onGoing")) {
+    return {
+      className: "bg-gradient-to-r from-orange-500 to-red-600 text-white",
+      text: "⏰ READY TO RESOLVE",
+      canJoin: false,
+      canResolve: true,
+    };
+  }
+
   switch (status) {
     case "queued":
       return {
         className: "bg-gradient-to-r from-yellow-500 to-orange-600 text-white",
         text: "⏳ QUEUED",
         canJoin: true,
+        canResolve: false,
       };
     case "onGoing":
+    case "active": // Handle both status names
       return {
         className: "bg-gradient-to-r from-green-500 to-emerald-600 text-white",
-        text: "🔥 LIVE",
+        text: "ONGOING",
         canJoin: false,
+        canResolve: false,
       };
     case "readyToResolve":
       return {
-        className: "bg-gradient-to-r from-blue-500 to-indigo-600 text-white",
-        text: "⚡ RESOLVING",
+        className: "bg-gradient-to-r from-orange-500 to-red-600 text-white",
+        text: "⏰ READY TO RESOLVE",
         canJoin: false,
+        canResolve: true,
       };
     case "ended":
+    case "finished": // Handle both status names
       return {
         className: "bg-gradient-to-r from-gray-500 to-gray-600 text-white",
         text: "✅ ENDED",
         canJoin: false,
+        canResolve: false,
       };
     default:
       return {
         className: "bg-gradient-to-r from-yellow-500 to-orange-600 text-white",
         text: "⏳ QUEUED",
         canJoin: true,
+        canResolve: false,
       };
   }
 };
 
 export const BattleCard: React.FC<BattleCardProps> = ({ battle }) => {
-  const statusDisplay = getBattleStatusDisplay(battle.status);
+  const router = useRouter();
+  const { resolveBattle, isResolving, isSuccess: resolveSuccess, error: resolveError } = useResolveBattle();
+  
+  // Local state to track if battle has been resolved
+  const [localStatus, setLocalStatus] = React.useState(battle.status);
+  
+  // Get complete battle details to check expiration
+  const { battleDetails: completeBattleDetails } = useCompleteBattleDetails(battle.battleId);
+  
+  // Check if battle is expired
+  const isExpired = completeBattleDetails 
+    ? isBattleExpired(completeBattleDetails.startTime, completeBattleDetails.duration)
+    : false;
+  
+  // Update local status when resolve is successful
+  React.useEffect(() => {
+    if (resolveSuccess) {
+      setLocalStatus("ended");
+    }
+  }, [resolveSuccess]);
+  
+  const statusDisplay = getBattleStatusDisplay(localStatus, isExpired);
+  
+  // Debug logs for all battles to check status detection
+  console.log(`Battle ${battle.battleId} Debug:`, {
+    originalStatus: battle.status,
+    localStatus,
+    isExpired,
+    statusDisplay,
+    canResolve: statusDisplay.canResolve,
+    canJoin: statusDisplay.canJoin,
+    completeBattleDetails: completeBattleDetails ? {
+      status: completeBattleDetails.status,
+      startTime: completeBattleDetails.startTime,
+      duration: completeBattleDetails.duration
+    } : null
+  });
+
+  const handleJoinBattle = () => {
+    // Navigate to battle page with battleId and required stake value
+    router.push(`/arena/battle/${battle.battleId}?requiredStake=${battle.totalValueUSD}&join=true`);
+  };
+
+  const handleResolveBattle = async () => {
+    try {
+      console.log("🔥 End Battle clicked for battle:", battle.battleId);
+      alert(`Ending battle ${battle.battleId}...`);
+      await resolveBattle(battle.battleId, 'range');
+    } catch (error) {
+      console.error("Failed to resolve battle:", error);
+      alert(`Failed to end battle: ${error}`);
+    }
+  };
 
   return (
     <Card className="relative bg-gray-900/50 hover:border-cyan-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/20 backdrop-blur-sm rounded-2xl overflow-hidden group">
@@ -120,18 +204,46 @@ export const BattleCard: React.FC<BattleCardProps> = ({ battle }) => {
           </div>
         </div>
 
+        {resolveError && (
+          <div className="mb-2 p-2 bg-red-900/20 border border-red-400/30 rounded-lg">
+            <div className="text-red-400 text-xs">
+              Error: {resolveError}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between pt-4 border-t border-gray-700/30">
           <span className="text-xs text-gray-500 flex items-center">
             <div className="w-1 h-1 bg-gray-500 rounded-full mr-2"></div>
             {battle.createdAt}
           </span>
-          <GradientLink
-            disabled={!statusDisplay.canJoin}
-            href={`/arena/battle/${battle.battleId}`}
-          >
-            <Sword className="w-4 h-4" />
-            {statusDisplay.canJoin ? "Join Battle" : "View Battle"}
-          </GradientLink>
+          {statusDisplay.canJoin ? (
+            <Button
+              onClick={handleJoinBattle}
+              className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200"
+            >
+              <Sword className="w-4 h-4 mr-2" />
+              Join Battle
+            </Button>
+          ) : statusDisplay.canResolve ? (
+            <Button
+              onClick={handleResolveBattle}
+              disabled={isResolving}
+              className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
+            >
+              {isResolving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Gavel className="w-4 h-4 mr-2" />
+              )}
+              {isResolving ? "Ending..." : "End Battle"}
+            </Button>
+          ) : (
+            <GradientLink href={`/arena/battle/${battle.battleId}`}>
+              <Sword className="w-4 h-4 mr-2" />
+              View Battle
+            </GradientLink>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useUserLPPositions } from "@/hooks/use-lp-positions";
 import { useCreateBattle, BATTLE_DURATIONS } from "@/hooks/use-create-battle";
 import { CONTRACTS } from "@/lib/config";
+import { LPPositionCard } from "@/components/test/lp-position-card";
 import { 
   Loader2, 
   CheckCircle, 
@@ -152,27 +153,12 @@ export function BattleIntegrationTest() {
                 </div>
                 <div className="grid gap-2">
                   {positions.slice(0, 3).map((position) => (
-                    <div 
+                    <LPPositionCard
                       key={position.tokenId}
-                      className={`bg-gray-800/50 p-3 rounded cursor-pointer border-2 transition-colors ${
-                        selectedTokenId === position.tokenId 
-                          ? 'border-cyan-500' 
-                          : 'border-transparent hover:border-gray-600'
-                      }`}
+                      position={position}
+                      isSelected={selectedTokenId === position.tokenId}
                       onClick={() => setSelectedTokenId(position.tokenId)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-white">
-                          {position.poolName || `${position.token0Symbol}/${position.token1Symbol}`}
-                        </span>
-                        <Badge variant="secondary">
-                          ${(parseFloat(position.valueUSD) / 1e6).toFixed(2)}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-gray-400">
-                        Token ID: #{position.tokenId} | Fee: {position.fee / 10000}%
-                      </div>
-                    </div>
+                    />
                   ))}
                 </div>
               </div>

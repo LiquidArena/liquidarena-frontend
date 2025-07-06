@@ -4,7 +4,7 @@ import { useReadContracts } from "wagmi";
 
 // Correct contract address for LPBattleVault
 const BATTLE_CONTRACT_ADDRESS =
-  "0x78f4f7A63C9a4f2d75749209d6EBf133464cb9e6" as const;
+  "0x9A84616E68F3B30752fB5659DCD33F3F49ee88dC" as const;
 
 // Use getBattleDetails function from the contract ABI to get status
 const BATTLE_STATUS_ABI = [

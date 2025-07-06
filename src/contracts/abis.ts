@@ -213,6 +213,17 @@ export const RANGE_BATTLE_ABI = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    name: "getLPTokenValueUSD",
+    outputs: [
+      { name: "amount0", type: "uint256" },
+      { name: "amount1", type: "uint256" },
+      { name: "usdValue", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
 ] as const;
 
 // Fee Battle ABI (from LPFeeBattle contract)
