@@ -239,14 +239,14 @@ function getBattleStatusBadge(status: string) {
         text: "QUEUED",
       };
 
-    case "onGoing":
+    case "ongoing":
       return {
         className: "bg-gradient-to-r from-green-500 to-emerald-600",
         icon: "⚔️",
         text: "ONGOING",
       };
 
-    case "readyToResolve":
+    case "readytoresolve":
       return {
         className: "bg-gradient-to-r from-blue-500 to-indigo-600",
         icon: "⚡",
