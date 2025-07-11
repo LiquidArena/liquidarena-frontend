@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createPublicClient, http, Address } from "viem";
+import { ERC20_ABI, POSITION_MANAGER_ABI } from "@/contracts/abis";
 import { CONTRACTS, MONAD_TESTNET } from "@/lib/contracts";
-import { POSITION_MANAGER_ABI, ERC20_ABI } from "@/contracts/abis";
+import { NextRequest, NextResponse } from "next/server";
+import { Address, createPublicClient, http } from "viem";
 
 // Create a public client for reading from the blockchain
 const publicClient = createPublicClient({
@@ -14,10 +14,15 @@ export async function POST(request: NextRequest) {
     const { tokenId } = await request.json();
 
     if (!tokenId) {
-      return NextResponse.json({ error: "Token ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Token ID is required" },
+        { status: 400 },
+      );
     }
 
-    console.log(`Fetching position details for token ${tokenId} from Position Manager: ${CONTRACTS.POSITION_MANAGER}`);
+    console.log(
+      `Fetching position details for token ${tokenId} from Position Manager: ${CONTRACTS.POSITION_MANAGER}`,
+    );
 
     try {
       // Fetch position data from Uniswap V3 Position Manager
@@ -28,22 +33,29 @@ export async function POST(request: NextRequest) {
         args: [BigInt(tokenId)],
       });
 
-      if (!positionData || !Array.isArray(positionData) || positionData.length < 12) {
+      if (
+        !positionData ||
+        !Array.isArray(positionData) ||
+        positionData.length < 12
+      ) {
         throw new Error("Invalid position data returned from Position Manager");
       }
 
       // Position Manager returns: [nonce, operator, token0, token1, fee, tickLower, tickUpper, liquidity, feeGrowthInside0LastX128, feeGrowthInside1LastX128, tokensOwed0, tokensOwed1]
       const [
-        ,  // nonce (unused)
-        ,  // operator (unused)
+        ,
+        ,
+        // nonce (unused)
+        // operator (unused)
         token0,
         token1,
         fee,
         tickLower,
         tickUpper,
-        liquidity,
-        ,  // feeGrowthInside0LastX128 (unused)
-        ,  // feeGrowthInside1LastX128 (unused)
+        liquidity, // feeGrowthInside0LastX128 (unused)
+        ,
+        ,
+        // feeGrowthInside1LastX128 (unused)
         tokensOwed0,
         tokensOwed1,
       ] = positionData;
@@ -95,44 +107,56 @@ export async function POST(request: NextRequest) {
         poolName: `${token0Symbol}/${token1Symbol}`,
       };
 
-      console.log(`Successfully fetched position details for token ${tokenId}:`, position);
+      // console.log(`Successfully fetched position details for token ${tokenId}:`, position);
 
       return NextResponse.json({ position });
-
     } catch (contractError) {
-      console.error(`Contract call failed for token ${tokenId}:`, contractError);
+      console.error(
+        `Contract call failed for token ${tokenId}:`,
+        contractError,
+      );
 
       // Handle specific error cases
       if (contractError instanceof Error) {
         const errorMessage = contractError.message.toLowerCase();
 
         // Check for Position Manager specific errors
-        if (errorMessage.includes("execution reverted") ||
-            errorMessage.includes("position not found") ||
-            errorMessage.includes("invalid token") ||
-            errorMessage.includes("erc721: owner query for nonexistent token")) {
-          console.log(`Token ${tokenId} not found in Position Manager - this token ID does not exist`);
+        if (
+          errorMessage.includes("execution reverted") ||
+          errorMessage.includes("position not found") ||
+          errorMessage.includes("invalid token") ||
+          errorMessage.includes("erc721: owner query for nonexistent token")
+        ) {
+          console.log(
+            `Token ${tokenId} not found in Position Manager - this token ID does not exist`,
+          );
           return NextResponse.json(
             {
               error: "Position not found",
               message: `Token ID ${tokenId} does not exist in the Position Manager`,
-              tokenId: tokenId.toString()
+              tokenId: tokenId.toString(),
             },
-            { status: 404 }
+            { status: 404 },
           );
         }
 
-        if (errorMessage.includes("network") || errorMessage.includes("timeout")) {
+        if (
+          errorMessage.includes("network") ||
+          errorMessage.includes("timeout")
+        ) {
           return NextResponse.json(
             { error: "Network error - please try again" },
-            { status: 503 }
+            { status: 503 },
           );
         }
 
-        if (errorMessage.includes("abi") || errorMessage.includes("signature")) {
+        if (
+          errorMessage.includes("abi") ||
+          errorMessage.includes("signature")
+        ) {
           return NextResponse.json(
             { error: "Contract ABI mismatch or invalid function call" },
-            { status: 400 }
+            { status: 400 },
           );
         }
       }
@@ -141,17 +165,19 @@ export async function POST(request: NextRequest) {
         {
           error: "Failed to fetch position details from contract",
           tokenId: tokenId.toString(),
-          details: contractError instanceof Error ? contractError.message : "Unknown error"
+          details:
+            contractError instanceof Error
+              ? contractError.message
+              : "Unknown error",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
-
   } catch (error) {
     console.error("Error in position details API:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -159,6 +185,6 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json(
     { error: "Method not allowed. Use POST." },
-    { status: 405 }
+    { status: 405 },
   );
 }
