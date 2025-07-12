@@ -1,0 +1,151 @@
+type LPBattleVault_BattleCreated {
+  id: ID!
+  battleId: BigInt!
+  creator: String!
+  creatorTokenId: BigInt!
+  duration: BigInt!
+  totalValueUSD: BigInt!
+}
+
+type LPBattleVault_BattleJoined {
+  id: ID!
+  battleId: BigInt!
+  opponent: String!
+  opponentTokenId: BigInt!
+  startTime: BigInt!
+}
+
+type LPBattleVault_BattleResolved {
+  id: ID!
+  battleId: BigInt!
+  winner: String!
+  resolver: String!
+  resolverReward: BigInt!
+}
+
+type LPBattleVault_BattleStatusChanged {
+  id: ID!
+  battleId: BigInt!
+  previousStatus: String!
+  newStatus: String!
+  timestamp: BigInt!
+}
+
+type LPBattleVault_ContractPausedByOwner {
+  id: ID!
+  by: String!
+}
+
+type LPBattleVault_ContractUnpausedByOwner {
+  id: ID!
+  by: String!
+}
+
+type LPBattleVault_EmergencyWithdrawal {
+  id: ID!
+  battleId: BigInt!
+  to: String!
+  tokenId: BigInt!
+}
+
+type LPBattleVault_OwnershipTransferred {
+  id: ID!
+  previousOwner: String!
+  newOwner: String!
+}
+
+type LPBattleVault_Paused {
+  id: ID!
+  account: String!
+}
+
+type LPBattleVault_PlayerOutOfRange {
+  id: ID!
+  battleId: BigInt!
+  player: String!
+  isCreator: Boolean!
+  timestamp: BigInt!
+}
+
+type LPBattleVault_PriceFeedSet {
+  id: ID!
+  token: String!
+  priceFeed: String!
+}
+
+type LPBattleVault_StablecoinSet {
+  id: ID!
+  token: String!
+  isStablecoin: Boolean!
+}
+
+type LPBattleVault_Unpaused {
+  id: ID!
+  account: String!
+}
+
+type LPFeeBattle_BattleCreated {
+  id: ID!
+  battleId: BigInt!
+  creator: String!
+  creatorTokenId: BigInt!
+}
+
+type LPFeeBattle_BattleJoined {
+  id: ID!
+  battleId: BigInt!
+  opponent: String!
+  opponentTokenId: BigInt!
+}
+
+type LPFeeBattle_BattleResolved {
+  id: ID!
+  battleId: BigInt!
+  winner: String!
+}
+
+type LPFeeBattle_BattleStatusChanged {
+  id: ID!
+  battleId: BigInt!
+  previousStatus: String!
+  newStatus: String!
+  timestamp: BigInt!
+}
+
+type LPFeeBattle_FeePerformanceUpdate {
+  id: ID!
+  battleId: BigInt!
+  player: String!
+  feeGrowthUSD: BigInt!
+  feeRate: BigInt!
+  isCreator: Boolean!
+}
+
+type LPFeeBattle_OwnershipTransferred {
+  id: ID!
+  previousOwner: String!
+  newOwner: String!
+}
+
+type LPFeeBattle_Paused {
+  id: ID!
+  account: String!
+}
+
+type LPFeeBattle_PriceFeedSet {
+  id: ID!
+  token: String!
+  priceFeed: String!
+}
+
+type LPFeeBattle_StablecoinSet {
+  id: ID!
+  token: String!
+  isStablecoin: Boolean!
+}
+
+type LPFeeBattle_Unpaused {
+  id: ID!
+  account: String!
+}
+

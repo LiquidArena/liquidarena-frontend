@@ -7,21 +7,23 @@ import {
 
 export default function FaqSection() {
   return (
-    <section className="min-h-[600px] max-w-6xl mx-auto bg-black w-full p-8 space-y-6">
-      <div className="text-end">
-        <h2 className="font-bold text-3xl lg:text-5xl">FAQ</h2>
-        <p>Frequently user asked questions</p>
+    <section className="min-h-[600px] bg-black w-full px-8 space-y-6">
+      <div className="container max-w-6xl mx-auto">
+        <div className="text-end bg-gradient-to-r from-transparent via-gray-100/10 py-6 to-transparent">
+          <h2 className="font-bold text-3xl lg:text-5xl">FAQ</h2>
+          <p>Frequently user asked questions</p>
+        </div>
+        <Accordion type="single" collapsible className="w-full">
+          {faqs.map((faq) => (
+            <AccordionItem key={faq.question} value={faq.question}>
+              <AccordionTrigger className="text-xl hover:no-underline">
+                {faq.question}
+              </AccordionTrigger>
+              <AccordionContent>{faq.answer}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
-      <Accordion type="single" collapsible className="w-full">
-        {faqs.map((faq) => (
-          <AccordionItem key={faq.question} value={faq.question}>
-            <AccordionTrigger className="text-xl hover:no-underline">
-              {faq.question}
-            </AccordionTrigger>
-            <AccordionContent>{faq.answer}</AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
     </section>
   );
 }
