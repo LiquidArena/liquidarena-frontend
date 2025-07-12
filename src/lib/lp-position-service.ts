@@ -1,7 +1,7 @@
 "use client";
 
-import { Address } from "viem";
 import { CONTRACTS } from "@/lib/config";
+import { Address } from "viem";
 
 // Types
 export interface LPPosition {
@@ -50,9 +50,9 @@ export class LPPositionService {
    */
   static async getUserTokenIds(userAddress: Address): Promise<bigint[]> {
     try {
-      const response = await fetch('/api/v1/positions/user-tokens', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/v1/positions/user-tokens", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ owner: userAddress }),
       });
 
@@ -74,11 +74,11 @@ export class LPPositionService {
    */
   static async getPositionDetails(tokenId: string): Promise<LPPosition> {
     try {
-      const response = await fetch('/api/v1/positions/details', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/v1/positions/details", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tokenId
+          tokenId,
         }),
       });
 
@@ -87,24 +87,39 @@ export class LPPositionService {
 
         // Handle specific error cases
         if (response.status === 404) {
-          throw new Error(`Position not found: Token ID ${tokenId} does not exist in the Position Manager`);
+          throw new Error(
+            `Position not found: Token ID ${tokenId} does not exist in the Position Manager`,
+          );
         }
 
         if (response.status === 503) {
-          throw new Error(`Network error: ${errorData.error || "Service temporarily unavailable"}`);
+          throw new Error(
+            `Network error: ${errorData.error || "Service temporarily unavailable"}`,
+          );
         }
 
-        throw new Error(errorData.error || `Failed to fetch position details (${response.status})`);
+        throw new Error(
+          errorData.error ||
+            `Failed to fetch position details (${response.status})`,
+        );
       }
 
       const data = await response.json();
       return data.position as LPPosition;
     } catch (error) {
       // Log the error but don't expose internal details to the UI
-      if (error instanceof Error && error.message.includes("Position not found")) {
-        console.warn(`Position ${tokenId} not found in Position Manager - this token ID may not exist`);
+      if (
+        error instanceof Error &&
+        error.message.includes("Position not found")
+      ) {
+        console.warn(
+          `Position ${tokenId} not found in Position Manager - this token ID may not exist`,
+        );
       } else {
-        console.error(`Error fetching position details for token ${tokenId}:`, error);
+        console.error(
+          `Error fetching position details for token ${tokenId}:`,
+          error,
+        );
       }
       throw error;
     }
@@ -116,7 +131,7 @@ export class LPPositionService {
   static async getUserPositions(userAddress: Address): Promise<LPPosition[]> {
     try {
       const tokenIds = await this.getUserTokenIds(userAddress);
-      
+
       if (tokenIds.length === 0) {
         return [];
       }
@@ -134,21 +149,23 @@ export class LPPositionService {
       const positions = await Promise.all(positionPromises);
 
       // Filter out null positions and closed positions (liquidity = 0)
-      const activePositions = positions.filter((position): position is LPPosition => {
-        if (position === null) return false;
+      const activePositions = positions.filter(
+        (position): position is LPPosition => {
+          if (position === null) return false;
 
-        // Hide closed positions (liquidity = 0)
-        const liquidity = BigInt(position.liquidity);
-        if (liquidity === 0n) {
-          console.log(`Hiding closed position ${position.tokenId} (${position.poolName}) - liquidity: ${position.liquidity}`);
-          return false;
-        }
+          // Hide closed positions (liquidity = 0)
+          const liquidity = BigInt(position.liquidity);
+          if (liquidity === 0n) {
+            // console.log(`Hiding closed position ${position.tokenId} (${position.poolName}) - liquidity: ${position.liquidity}`);
+            return false;
+          }
 
-        console.log(`Showing active position ${position.tokenId} (${position.poolName}) - liquidity: ${position.liquidity}`);
-        return true;
-      });
+          // console.log(`Showing active position ${position.tokenId} (${position.poolName}) - liquidity: ${position.liquidity}`);
+          return true;
+        },
+      );
 
-      console.log(`Filtered ${positions.length} total positions to ${activePositions.length} active positions`);
+      // console.log(`Filtered ${positions.length} total positions to ${activePositions.length} active positions`);
       return activePositions;
     } catch (error) {
       console.error("Error fetching user positions:", error);
@@ -160,27 +177,30 @@ export class LPPositionService {
    * Check if a user can join a battle with their LP position
    */
   static async canJoinBattle(
-    battleId: string, 
-    tokenId: string, 
-    battleType: 'range' | 'fee' = 'range'
+    battleId: string,
+    tokenId: string,
+    battleType: "range" | "fee" = "range",
   ): Promise<{ canJoin: boolean; reason: string }> {
     try {
-      const contractAddress = battleType === 'range' ? CONTRACTS.RANGE_BATTLE : CONTRACTS.FEE_BATTLE;
-      
-      const response = await fetch('/api/v1/battles/can-join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          battleId, 
-          tokenId, 
+      const contractAddress =
+        battleType === "range" ? CONTRACTS.RANGE_BATTLE : CONTRACTS.FEE_BATTLE;
+
+      const response = await fetch("/api/v1/battles/can-join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          battleId,
+          tokenId,
           contractAddress,
-          battleType 
+          battleType,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to check battle eligibility");
+        throw new Error(
+          errorData.error || "Failed to check battle eligibility",
+        );
       }
 
       const data = await response.json();
@@ -194,17 +214,21 @@ export class LPPositionService {
   /**
    * Get battle details for a specific battle ID
    */
-  static async getBattleDetails(battleId: string, battleType: 'range' | 'fee' = 'range'): Promise<BattleDetails> {
+  static async getBattleDetails(
+    battleId: string,
+    battleType: "range" | "fee" = "range",
+  ): Promise<BattleDetails> {
     try {
-      const contractAddress = battleType === 'range' ? CONTRACTS.RANGE_BATTLE : CONTRACTS.FEE_BATTLE;
-      
-      const response = await fetch('/api/v1/battles/details', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          battleId, 
+      const contractAddress =
+        battleType === "range" ? CONTRACTS.RANGE_BATTLE : CONTRACTS.FEE_BATTLE;
+
+      const response = await fetch("/api/v1/battles/details", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          battleId,
           contractAddress,
-          battleType 
+          battleType,
         }),
       });
 
@@ -224,16 +248,19 @@ export class LPPositionService {
   /**
    * Get all active battles
    */
-  static async getActiveBattles(battleType: 'range' | 'fee' = 'range'): Promise<string[]> {
+  static async getActiveBattles(
+    battleType: "range" | "fee" = "range",
+  ): Promise<string[]> {
     try {
-      const contractAddress = battleType === 'range' ? CONTRACTS.RANGE_BATTLE : CONTRACTS.FEE_BATTLE;
-      
-      const response = await fetch('/api/v1/battles/active', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      const contractAddress =
+        battleType === "range" ? CONTRACTS.RANGE_BATTLE : CONTRACTS.FEE_BATTLE;
+
+      const response = await fetch("/api/v1/battles/active", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           contractAddress,
-          battleType 
+          battleType,
         }),
       });
 
@@ -254,19 +281,20 @@ export class LPPositionService {
    * Get user's battles
    */
   static async getUserBattles(
-    userAddress: Address, 
-    battleType: 'range' | 'fee' = 'range'
+    userAddress: Address,
+    battleType: "range" | "fee" = "range",
   ): Promise<{ battleIds: string[]; isCreator: boolean[] }> {
     try {
-      const contractAddress = battleType === 'range' ? CONTRACTS.RANGE_BATTLE : CONTRACTS.FEE_BATTLE;
-      
-      const response = await fetch('/api/v1/battles/user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userAddress, 
+      const contractAddress =
+        battleType === "range" ? CONTRACTS.RANGE_BATTLE : CONTRACTS.FEE_BATTLE;
+
+      const response = await fetch("/api/v1/battles/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userAddress,
           contractAddress,
-          battleType 
+          battleType,
         }),
       });
 
@@ -287,16 +315,20 @@ export class LPPositionService {
 // Utility functions for mock data and debugging
 export function shouldUseMockData(error?: Error): boolean {
   // Use mock data if there's a network error or contract not found
-  return !!error && (
-    error.message.includes('network') ||
-    error.message.includes('contract') ||
-    error.message.includes('not found')
+  return (
+    !!error &&
+    (error.message.includes("network") ||
+      error.message.includes("contract") ||
+      error.message.includes("not found"))
   );
 }
 
-export function generateMockLPPositions(_userAddress: Address, count: number): LPPosition[] {
+export function generateMockLPPositions(
+  _userAddress: Address,
+  count: number,
+): LPPosition[] {
   const mockPositions: LPPosition[] = [];
-  
+
   for (let i = 0; i < count; i++) {
     mockPositions.push({
       tokenId: (1000 + i).toString(),
@@ -316,14 +348,14 @@ export function generateMockLPPositions(_userAddress: Address, count: number): L
       poolName: "USDC/WETH",
     });
   }
-  
+
   return mockPositions;
 }
 
 export function logPositionDebugInfo(
-  userAddress: Address, 
-  balance: bigint, 
-  positions: LPPosition[]
+  userAddress: Address,
+  balance: bigint,
+  positions: LPPosition[],
 ): void {
   console.log("=== LP Position Debug Info ===");
   console.log("User Address:", userAddress);

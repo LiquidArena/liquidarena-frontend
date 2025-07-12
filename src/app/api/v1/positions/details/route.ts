@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(
-      `Fetching position details for token ${tokenId} from Position Manager: ${CONTRACTS.POSITION_MANAGER}`,
-    );
+    // console.log(
+    //   `Fetching position details for token ${tokenId} from Position Manager: ${CONTRACTS.POSITION_MANAGER}`,
+    // );
 
     try {
       // Fetch position data from Uniswap V3 Position Manager
@@ -127,9 +127,9 @@ export async function POST(request: NextRequest) {
           errorMessage.includes("invalid token") ||
           errorMessage.includes("erc721: owner query for nonexistent token")
         ) {
-          console.log(
-            `Token ${tokenId} not found in Position Manager - this token ID does not exist`,
-          );
+          // console.log(
+          //   `Token ${tokenId} not found in Position Manager - this token ID does not exist`,
+          // );
           return NextResponse.json(
             {
               error: "Position not found",

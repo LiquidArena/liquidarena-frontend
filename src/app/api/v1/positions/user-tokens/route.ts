@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createPublicClient, http, Address } from "viem";
-import { CONTRACTS, MONAD_TESTNET } from "@/lib/contracts";
 import { POSITION_MANAGER_ABI } from "@/contracts/abis";
+import { CONTRACTS, MONAD_TESTNET } from "@/lib/contracts";
+import { NextRequest, NextResponse } from "next/server";
+import { Address, createPublicClient, http } from "viem";
 
 // Create a public client for reading from the blockchain
 const publicClient = createPublicClient({
@@ -14,10 +14,13 @@ export async function POST(request: NextRequest) {
     const { owner } = await request.json();
 
     if (!owner) {
-      return NextResponse.json({ error: "Owner address is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Owner address is required" },
+        { status: 400 },
+      );
     }
 
-    console.log(`Fetching LP NFT tokens for owner: ${owner}`);
+    // console.log(`Fetching LP NFT tokens for owner: ${owner}`);
 
     try {
       // First, get the balance of LP NFTs for the user
@@ -28,7 +31,7 @@ export async function POST(request: NextRequest) {
         args: [owner as Address],
       });
 
-      console.log(`User ${owner} has ${balance} LP NFTs`);
+      // console.logconsole.log(`User ${owner} has ${balance} LP NFTs`);
 
       if (!balance || balance === 0n) {
         return NextResponse.json({ tokenIds: [] });
@@ -54,10 +57,12 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      console.log(`Successfully fetched ${tokenIds.length} token IDs for user ${owner}:`, tokenIds);
+      // console.log(
+      //   `Successfully fetched ${tokenIds.length} token IDs for user ${owner}:`,
+      //   tokenIds,
+      // );
 
       return NextResponse.json({ tokenIds });
-
     } catch (contractError) {
       console.error("Contract call failed:", contractError);
 
@@ -65,29 +70,31 @@ export async function POST(request: NextRequest) {
       if (contractError instanceof Error) {
         if (contractError.message.includes("execution reverted")) {
           return NextResponse.json(
-            { error: "Position Manager contract not found or user has no positions" },
-            { status: 404 }
+            {
+              error:
+                "Position Manager contract not found or user has no positions",
+            },
+            { status: 404 },
           );
         }
         if (contractError.message.includes("network")) {
           return NextResponse.json(
             { error: "Network error - please try again" },
-            { status: 503 }
+            { status: 503 },
           );
         }
       }
 
       return NextResponse.json(
         { error: "Failed to fetch user tokens from contract" },
-        { status: 500 }
+        { status: 500 },
       );
     }
-
   } catch (error) {
     console.error("Error in user tokens API:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -95,6 +102,6 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json(
     { error: "Method not allowed. Use POST." },
-    { status: 405 }
+    { status: 405 },
   );
 }

@@ -17,14 +17,14 @@ import {
 import { GradientButton, GradientLink } from "@/components/ui/gradient-button";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCompleteBattleDetails } from "@/hooks/use-battle-contract";
+import { useAvailableBattlePositions } from "@/hooks/use-create-battle";
+import { useJoinBattleWithApproval } from "@/hooks/use-join-battle-with-approval";
+import { useLPPositionUSDValue } from "@/hooks/use-lp-usd-value";
+import { useResolveBattle } from "@/hooks/use-resolve-battle";
 import { Clock, TrendingDown, TrendingUp, Trophy, Users } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useCompleteBattleDetails } from "@/hooks/use-battle-contract";
-import { useLPPositionUSDValue } from "@/hooks/use-lp-usd-value";
-import { useJoinBattleWithApproval } from "@/hooks/use-join-battle-with-approval";
-import { useAvailableBattlePositions } from "@/hooks/use-create-battle";
-import { useResolveBattle } from "@/hooks/use-resolve-battle";
 import {
   CartesianGrid,
   Line,
@@ -43,41 +43,46 @@ interface BattleViewProps {
 export default function BattleView({ battleId }: BattleViewProps) {
   const searchParams = useSearchParams();
   const isHost = searchParams.get("host") === "true";
-  
+
   // Fetch battle details from smart contract
-  const { battleDetails, isLoading: isBattleLoading, error: battleError } = useCompleteBattleDetails(battleId || undefined);
-  
+  const {
+    battleDetails,
+    isLoading: isBattleLoading,
+    error: battleError,
+  } = useCompleteBattleDetails(battleId || undefined);
+
   // Join battle with approval functionality
-  const { 
-    startJoinBattle, 
-    approveToken, 
-    joinBattle, 
-    needsApproval, 
-    isApproving, 
-    isJoining, 
-    isSuccess, 
-    error: joinError, 
-    currentStep 
+  const {
+    startJoinBattle,
+    approveToken,
+    joinBattle,
+    needsApproval,
+    isApproving,
+    isJoining,
+    isSuccess,
+    error: joinError,
+    currentStep,
   } = useJoinBattleWithApproval();
 
   // Resolve battle functionality
-  const { 
-    resolveBattle, 
-    isResolving, 
-    isSuccess: resolveSuccess, 
-    error: resolveError 
+  const {
+    resolveBattle,
+    isResolving,
+    isSuccess: resolveSuccess,
+    error: resolveError,
   } = useResolveBattle();
-  
+
   // Use the same hook as create battle for consistency
-  const { positions: userLPPositions, isLoading: isLoadingPositions } = useAvailableBattlePositions();
-  
+  const { positions: userLPPositions, isLoading: isLoadingPositions } =
+    useAvailableBattlePositions();
+
   // Debug logs
-  console.log("Battle ID from URL:", battleId);
-  console.log("Battle Details:", battleDetails);
-  console.log("Battle Loading:", isBattleLoading);
-  console.log("Battle Error:", battleError);
-  console.log("User LP Positions:", userLPPositions);
-  
+  // console.log("Battle ID from URL:", battleId);
+  // console.log("Battle Details:", battleDetails);
+  // console.log("Battle Loading:", isBattleLoading);
+  // console.log("Battle Error:", battleError);
+  // console.log("User LP Positions:", userLPPositions);
+
   const [battleStatus, setBattleStatus] = useState<
     "waiting" | "selecting" | "active" | "readyToResolve" | "finished"
   >("waiting");
@@ -120,49 +125,62 @@ export default function BattleView({ battleId }: BattleViewProps) {
   >([]);
 
   // Get required stake value from battle details using 1e30 divisor
-  const requiredStakeValue = battleDetails?.usdValue 
-    ? parseFloat(battleDetails.usdValue) / 1e30 
+  const requiredStakeValue = battleDetails?.usdValue
+    ? parseFloat(battleDetails.usdValue) / 1e30
     : 1.25; // Default fallback
-  
+
   // Calculate 5% tolerance range
   const tolerance = 0.05; // 5%
   const minValue = requiredStakeValue * (1 - tolerance);
   const maxValue = requiredStakeValue * (1 + tolerance);
-  
-  console.log("Required stake value:", requiredStakeValue);
-  console.log("Battle details usdValue:", battleDetails?.usdValue);
+
+  // console.log("Required stake value:", requiredStakeValue);
+  // console.log("Battle details usdValue:", battleDetails?.usdValue);
 
   // Component to show LP position with USD value
-  function LPPositionCard({ position, isSelected, onSelect }: { 
+  function LPPositionCard({
+    position,
+    isSelected,
+    onSelect,
+  }: {
     position: {
       tokenId: string;
       poolName?: string;
       token0Symbol?: string;
       token1Symbol?: string;
       fee: number;
-    }, 
-    isSelected: boolean, 
-    onSelect: () => void
+    };
+    isSelected: boolean;
+    onSelect: () => void;
   }) {
-    const { usdValue, isLoading, error, isConnected, isOwner } = useLPPositionUSDValue(position.tokenId);
-    
+    const { usdValue, isLoading, error, isConnected, isOwner } =
+      useLPPositionUSDValue(position.tokenId);
+
     const getUSDDisplay = () => {
       if (!isConnected) return { display: "Connect Wallet", numericValue: 0 };
       if (isOwner === false) return { display: "Not Owned", numericValue: 0 };
       if (isLoading) return { display: "Loading...", numericValue: 0 };
       if (error) return { display: "Error", numericValue: 0 };
-      
+
       if (usdValue && usdValue.valueUSD !== "0") {
         const rawValue = parseFloat(usdValue.valueUSD);
-        const divisors = [1, 1e3, 1e6, 1e9, 1e12, 1e15, 1e18, 1e21, 1e24, 1e27, 1e30];
-        
+        const divisors = [
+          1, 1e3, 1e6, 1e9, 1e12, 1e15, 1e18, 1e21, 1e24, 1e27, 1e30,
+        ];
+
         for (const divisor of divisors) {
           const testValue = rawValue / divisor;
           if (testValue >= 0.1 && testValue <= 10) {
-            return { display: `$${testValue.toFixed(2)}`, numericValue: testValue };
+            return {
+              display: `$${testValue.toFixed(2)}`,
+              numericValue: testValue,
+            };
           }
         }
-        return { display: `$${(rawValue / 1e30).toFixed(2)}`, numericValue: rawValue / 1e30 };
+        return {
+          display: `$${(rawValue / 1e30).toFixed(2)}`,
+          numericValue: rawValue / 1e30,
+        };
       }
       return { display: "$0.00", numericValue: 0 };
     };
@@ -176,31 +194,40 @@ export default function BattleView({ battleId }: BattleViewProps) {
         key={position.tokenId}
         className={`cursor-pointer transition-all ${
           isSelected
-            ? isCompatible 
+            ? isCompatible
               ? "bg-green-600/20 border-green-400"
               : "bg-red-600/20 border-red-400"
             : isCompatible
-            ? "bg-black/20 border-green-600 hover:border-green-400"
-            : "bg-black/10 border-red-600/30 opacity-50 cursor-not-allowed"
+              ? "bg-black/20 border-green-600 hover:border-green-400"
+              : "bg-black/10 border-red-600/30 opacity-50 cursor-not-allowed"
         }`}
         onClick={isDisabled ? undefined : onSelect}
       >
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <div className={`font-medium ${isCompatible ? "text-white" : "text-gray-400"}`}>
-                {position.poolName || `${position.token0Symbol}/${position.token1Symbol}`}
+              <div
+                className={`font-medium ${isCompatible ? "text-white" : "text-gray-400"}`}
+              >
+                {position.poolName ||
+                  `${position.token0Symbol}/${position.token1Symbol}`}
               </div>
               <div className="text-sm text-gray-400">
-                Token #{position.tokenId} • {(position.fee / 10000)}% Fee
+                Token #{position.tokenId} • {position.fee / 10000}% Fee
               </div>
             </div>
             <div className="text-right">
-              <div className={`font-medium ${isCompatible ? "text-green-400" : "text-red-400"}`}>
+              <div
+                className={`font-medium ${isCompatible ? "text-green-400" : "text-red-400"}`}
+              >
                 {usdInfo.display}
               </div>
               <div className="text-xs text-gray-400">
-                {isLoading ? "Loading..." : isCompatible ? "Compatible" : "Incompatible"}
+                {isLoading
+                  ? "Loading..."
+                  : isCompatible
+                    ? "Compatible"
+                    : "Incompatible"}
               </div>
             </div>
           </div>
@@ -208,7 +235,6 @@ export default function BattleView({ battleId }: BattleViewProps) {
       </Card>
     );
   }
-
 
   const getPositionCompatibility = (usdValue: number) => {
     const tolerance = 0.05; // 5% tolerance
@@ -227,24 +253,39 @@ export default function BattleView({ battleId }: BattleViewProps) {
   useEffect(() => {
     if (battleDetails) {
       // Determine status based on battle details
-      if (battleDetails.status === "queued" && battleDetails.opponent === "0x0000000000000000000000000000000000000000") {
+      if (
+        battleDetails.status === "queued" &&
+        battleDetails.opponent === "0x0000000000000000000000000000000000000000"
+      ) {
         // Battle has no opponent - show LP selection for joining
         setBattleStatus("selecting");
-      } else if (battleDetails.status === "queued" && battleDetails.opponent !== "0x0000000000000000000000000000000000000000") {
+      } else if (
+        battleDetails.status === "queued" &&
+        battleDetails.opponent !== "0x0000000000000000000000000000000000000000"
+      ) {
         // Battle has opponent but not started yet - show battle view
         setBattleStatus("active");
-      } else if (battleDetails.status === "active" || battleDetails.status === "onGoing") {
+      } else if (
+        battleDetails.status === "active" ||
+        battleDetails.status === "onGoing"
+      ) {
         // Battle is actively running
         setBattleStatus("active");
       } else if (battleDetails.status === "readyToResolve") {
         // Battle is ready to be resolved - show battle view with resolve option
         setBattleStatus("readyToResolve");
-      } else if (battleDetails.status === "finished" || battleDetails.status === "ended") {
+      } else if (
+        battleDetails.status === "finished" ||
+        battleDetails.status === "ended"
+      ) {
         // Battle is completely finished
         setBattleStatus("finished");
       } else {
         // Default fallback - if queued without opponent, allow joining
-        if (battleDetails.opponent === "0x0000000000000000000000000000000000000000") {
+        if (
+          battleDetails.opponent ===
+          "0x0000000000000000000000000000000000000000"
+        ) {
           setBattleStatus("selecting");
         } else {
           setBattleStatus("active");
@@ -341,13 +382,15 @@ export default function BattleView({ battleId }: BattleViewProps) {
   const handleJoinBattle = async () => {
     if (!selectedPool || !battleId) return;
 
-    const selectedPosition = userLPPositions.find((pos: { tokenId: string }) => pos.tokenId === selectedPool);
+    const selectedPosition = userLPPositions.find(
+      (pos: { tokenId: string }) => pos.tokenId === selectedPool,
+    );
     if (!selectedPosition?.tokenId) return;
 
     // Start the approval flow
     await startJoinBattle({
       battleId: battleId,
-      tokenId: selectedPosition.tokenId
+      tokenId: selectedPosition.tokenId,
     });
   };
 
@@ -375,7 +418,7 @@ export default function BattleView({ battleId }: BattleViewProps) {
 
   const handleResolveBattle = async () => {
     if (battleId) {
-      await resolveBattle(battleId, 'range');
+      await resolveBattle(battleId, "range");
     }
   };
 
@@ -400,7 +443,7 @@ export default function BattleView({ battleId }: BattleViewProps) {
       return { winner: "draw", reason: "Equal gains" };
     }
   };
-  
+
   return (
     <div className="container max-w-6xl mx-auto px-4 py-24">
       {/* Battle Timer */}
@@ -609,10 +652,13 @@ export default function BattleView({ battleId }: BattleViewProps) {
                 Required Stake Value
               </div>
               <div className="text-white text-lg font-bold">
-                {isBattleLoading ? "Loading..." : `$${requiredStakeValue.toFixed(2)}`}
+                {isBattleLoading
+                  ? "Loading..."
+                  : `$${requiredStakeValue.toFixed(2)}`}
               </div>
               <div className="text-xs text-gray-400">
-                Accepted range: ${minValue.toFixed(2)} - ${maxValue.toFixed(2)} (±5% tolerance)
+                Accepted range: ${minValue.toFixed(2)} - ${maxValue.toFixed(2)}{" "}
+                (±5% tolerance)
               </div>
               {battleId && (
                 <div className="text-xs text-gray-500 mt-1">
@@ -642,7 +688,7 @@ export default function BattleView({ battleId }: BattleViewProps) {
                 </div>
                 <div className="grid gap-3">
                   {userLPPositions.map((position) => (
-                    <LPPositionCard 
+                    <LPPositionCard
                       key={position.tokenId}
                       position={position}
                       isSelected={selectedPool === position.tokenId}
@@ -666,43 +712,43 @@ export default function BattleView({ battleId }: BattleViewProps) {
 
             {joinError && (
               <div className="mb-4 p-3 bg-red-900/20 border border-red-400/30 rounded-lg">
-                <div className="text-red-400 text-sm">
-                  {joinError}
-                </div>
+                <div className="text-red-400 text-sm">{joinError}</div>
               </div>
             )}
 
             <GradientButton
               onClick={
-                currentStep === 'approval' ? handleApprove :
-                currentStep === 'joining' ? handleActualJoin :
-                handleJoinBattle
+                currentStep === "approval"
+                  ? handleApprove
+                  : currentStep === "joining"
+                    ? handleActualJoin
+                    : handleJoinBattle
               }
               disabled={
-                !selectedPool || 
-                isApproving || 
-                isJoining || 
-                isLoadingPositions || 
+                !selectedPool ||
+                isApproving ||
+                isJoining ||
+                isLoadingPositions ||
                 userLPPositions.length === 0
               }
               className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50"
               size="lg"
             >
-              {isApproving 
-                ? "Approving NFT..." 
-                : isJoining 
-                ? "Joining Battle..." 
-                : isLoadingPositions 
-                ? "Loading Positions..."
-                : userLPPositions.length === 0
-                ? "No LP Positions"
-                : !selectedPool
-                ? "Select a Position"
-                : currentStep === 'approval'
-                ? "Approve NFT"
-                : currentStep === 'joining'
-                ? "Join Battle"
-                : "Join Battle"}
+              {isApproving
+                ? "Approving NFT..."
+                : isJoining
+                  ? "Joining Battle..."
+                  : isLoadingPositions
+                    ? "Loading Positions..."
+                    : userLPPositions.length === 0
+                      ? "No LP Positions"
+                      : !selectedPool
+                        ? "Select a Position"
+                        : currentStep === "approval"
+                          ? "Approve NFT"
+                          : currentStep === "joining"
+                            ? "Join Battle"
+                            : "Join Battle"}
             </GradientButton>
           </CardContent>
         </Card>
@@ -711,180 +757,179 @@ export default function BattleView({ battleId }: BattleViewProps) {
       {/* Active Battle */}
       {(battleStatus === "active" || battleStatus === "readyToResolve") && (
         <>
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Host */}
-          <Card className="bg-black/40 border-cyan-800/30 backdrop-blur-sm">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-white">Host</CardTitle>
-                <Badge
-                  variant="outline"
-                  className="text-cyan-400 border-cyan-400"
-                >
-                  {hostData.address}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Pool:</span>
-                <span className="text-white font-medium">{hostData.pool}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">DEX:</span>
-                <span className="text-white">{hostData.dex}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Stake:</span>
-                <span className="text-cyan-400 font-medium">
-                  {hostData.stake}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Current Price:</span>
-                <span className="text-white">
-                  ${hostData.currentPrice.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Entry Price:</span>
-                <span className="text-white">
-                  ${hostData.entryPrice.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Price Range:</span>
-                <span className="text-white text-sm">
-                  ${hostData.priceRangeMin.toFixed(2)} - $
-                  {hostData.priceRangeMax.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Range Status:</span>
-                <Badge
-                  className={
-                    hostData.isOutOfRange ? "bg-red-500" : "bg-green-500"
-                  }
-                >
-                  {hostData.isOutOfRange ? "OUT OF RANGE" : "IN RANGE"}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Gain/Loss:</span>
-                <div
-                  className={`flex items-center ${hostData.gain >= 0 ? "text-green-400" : "text-red-400"}`}
-                >
-                  {hostData.gain >= 0 ? (
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 mr-1" />
-                  )}
-                  {hostData.gain.toFixed(2)}%
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Host */}
+            <Card className="bg-black/40 border-cyan-800/30 backdrop-blur-sm">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white">Host</CardTitle>
+                  <Badge
+                    variant="outline"
+                    className="text-cyan-400 border-cyan-400"
+                  >
+                    {hostData.address}
+                  </Badge>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Pool:</span>
+                  <span className="text-white font-medium">
+                    {hostData.pool}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">DEX:</span>
+                  <span className="text-white">{hostData.dex}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Stake:</span>
+                  <span className="text-cyan-400 font-medium">
+                    {hostData.stake}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Current Price:</span>
+                  <span className="text-white">
+                    ${hostData.currentPrice.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Entry Price:</span>
+                  <span className="text-white">
+                    ${hostData.entryPrice.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Price Range:</span>
+                  <span className="text-white text-sm">
+                    ${hostData.priceRangeMin.toFixed(2)} - $
+                    {hostData.priceRangeMax.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Range Status:</span>
+                  <Badge
+                    className={
+                      hostData.isOutOfRange ? "bg-red-500" : "bg-green-500"
+                    }
+                  >
+                    {hostData.isOutOfRange ? "OUT OF RANGE" : "IN RANGE"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Gain/Loss:</span>
+                  <div
+                    className={`flex items-center ${hostData.gain >= 0 ? "text-green-400" : "text-red-400"}`}
+                  >
+                    {hostData.gain >= 0 ? (
+                      <TrendingUp className="h-4 w-4 mr-1" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 mr-1" />
+                    )}
+                    {hostData.gain.toFixed(2)}%
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Opponent */}
-          <Card className="bg-black/40 border-pink-800/30 backdrop-blur-sm">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-white">Opponent</CardTitle>
-                <Badge
-                  variant="outline"
-                  className="text-pink-400 border-pink-400"
-                >
-                  {opponentData.address}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Pool:</span>
-                <span className="text-white font-medium">
-                  {opponentData.pool}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">DEX:</span>
-                <span className="text-white">{opponentData.dex}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Stake:</span>
-                <span className="text-pink-400 font-medium">
-                  {opponentData.stake}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Current Price:</span>
-                <span className="text-white">
-                  ${opponentData.currentPrice.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Entry Price:</span>
-                <span className="text-white">
-                  ${opponentData.entryPrice.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Price Range:</span>
-                <span className="text-white text-sm">
-                  ${opponentData.priceRangeMin.toFixed(2)} - $
-                  {opponentData.priceRangeMax.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Range Status:</span>
-                <Badge
-                  className={
-                    opponentData.isOutOfRange ? "bg-red-500" : "bg-green-500"
-                  }
-                >
-                  {opponentData.isOutOfRange ? "OUT OF RANGE" : "IN RANGE"}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Gain/Loss:</span>
-                <div
-                  className={`flex items-center ${opponentData.gain >= 0 ? "text-green-400" : "text-red-400"}`}
-                >
-                  {opponentData.gain >= 0 ? (
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 mr-1" />
-                  )}
-                  {opponentData.gain.toFixed(2)}%
+            {/* Opponent */}
+            <Card className="bg-black/40 border-pink-800/30 backdrop-blur-sm">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white">Opponent</CardTitle>
+                  <Badge
+                    variant="outline"
+                    className="text-pink-400 border-pink-400"
+                  >
+                    {opponentData.address}
+                  </Badge>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Solve Button for Ready to Resolve */}
-        {battleStatus === "readyToResolve" && (
-          <div className="mt-8 text-center">
-            {resolveError && (
-              <div className="mb-4 p-3 bg-red-900/20 border border-red-400/30 rounded-lg">
-                <div className="text-red-400 text-sm">
-                  {resolveError}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Pool:</span>
+                  <span className="text-white font-medium">
+                    {opponentData.pool}
+                  </span>
                 </div>
-              </div>
-            )}
-            
-            <GradientButton
-              onClick={handleResolveBattle}
-              disabled={isResolving}
-              className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
-              size="lg"
-            >
-              {isResolving ? "Solving..." : "Solve"}
-            </GradientButton>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">DEX:</span>
+                  <span className="text-white">{opponentData.dex}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Stake:</span>
+                  <span className="text-pink-400 font-medium">
+                    {opponentData.stake}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Current Price:</span>
+                  <span className="text-white">
+                    ${opponentData.currentPrice.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Entry Price:</span>
+                  <span className="text-white">
+                    ${opponentData.entryPrice.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Price Range:</span>
+                  <span className="text-white text-sm">
+                    ${opponentData.priceRangeMin.toFixed(2)} - $
+                    {opponentData.priceRangeMax.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Range Status:</span>
+                  <Badge
+                    className={
+                      opponentData.isOutOfRange ? "bg-red-500" : "bg-green-500"
+                    }
+                  >
+                    {opponentData.isOutOfRange ? "OUT OF RANGE" : "IN RANGE"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Gain/Loss:</span>
+                  <div
+                    className={`flex items-center ${opponentData.gain >= 0 ? "text-green-400" : "text-red-400"}`}
+                  >
+                    {opponentData.gain >= 0 ? (
+                      <TrendingUp className="h-4 w-4 mr-1" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 mr-1" />
+                    )}
+                    {opponentData.gain.toFixed(2)}%
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
+
+          {/* Solve Button for Ready to Resolve */}
+          {battleStatus === "readyToResolve" && (
+            <div className="mt-8 text-center">
+              {resolveError && (
+                <div className="mb-4 p-3 bg-red-900/20 border border-red-400/30 rounded-lg">
+                  <div className="text-red-400 text-sm">{resolveError}</div>
+                </div>
+              )}
+
+              <GradientButton
+                onClick={handleResolveBattle}
+                disabled={isResolving}
+                className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
+                size="lg"
+              >
+                {isResolving ? "Solving..." : "Solve"}
+              </GradientButton>
+            </div>
+          )}
         </>
       )}
-
 
       {/* Battle Finished */}
       {battleStatus === "finished" && (

@@ -1,12 +1,12 @@
 "use client";
 
-import { CONTRACTS } from "@/lib/config";
 import { POSITION_MANAGER_ABI } from "@/contracts/abis";
+import { CONTRACTS } from "@/lib/config";
 import {
   LPPositionService,
   generateMockLPPositions,
-  shouldUseMockData,
   logPositionDebugInfo,
+  shouldUseMockData,
 } from "@/lib/lp-position-service";
 import { useQuery } from "@tanstack/react-query";
 import { useAccount, useReadContract } from "wagmi";
@@ -28,10 +28,10 @@ export function useUserLPTokenIds() {
 
   // Log balance information for debugging
   if (balance !== undefined) {
-    console.log(`LP NFT balance for ${address}:`, balance.toString());
+    // console.log(`LP NFT balance for ${address}:`, balance.toString());
   }
   if (balanceError) {
-    console.error("Error fetching LP NFT balance:", balanceError.message);
+    // console.error("Error fetching LP NFT balance:", balanceError.message);
   }
 
   const tokenIdsQuery = useQuery({
@@ -41,23 +41,28 @@ export function useUserLPTokenIds() {
 
       // If balance query failed, return empty array (contract might not exist)
       if (balanceError) {
-        console.warn("Position Manager contract not available:", balanceError.message);
+        console.warn(
+          "Position Manager contract not available:",
+          balanceError.message,
+        );
         return [];
       }
 
       if (!balance || balance === 0n) {
-        console.log("User has no LP NFTs");
+        // console.log("User has no LP NFTs");
         return [];
       }
 
-      console.log(`Fetching ${balance} LP NFT token IDs for user ${address}`);
+      // console.log(`Fetching ${balance} LP NFT token IDs for user ${address}`);
 
       try {
         // Use the centralized service
         const tokenIds = await LPPositionService.getUserTokenIds(address);
-        console.log(`Successfully fetched ${tokenIds.length} real token IDs:`, tokenIds.map((id: bigint) => id.toString()));
+        // console.log(
+        //   `Successfully fetched ${tokenIds.length} real token IDs:`,
+        //   tokenIds.map((id: bigint) => id.toString()),
+        // );
         return tokenIds;
-
       } catch (error) {
         console.error("Error fetching real token IDs, using fallback:", error);
 
@@ -67,7 +72,10 @@ export function useUserLPTokenIds() {
           mockTokenIds.push(BigInt(i + 1));
         }
 
-        console.log("Using fallback mock token IDs:", mockTokenIds.map(id => id.toString()));
+        // console.log(
+        //   "Using fallback mock token IDs:",
+        //   mockTokenIds.map((id) => id.toString()),
+        // );
         return mockTokenIds;
       }
     },
@@ -115,11 +123,16 @@ export function useUserLPPositions() {
       try {
         // Use the centralized service
         const positions = await LPPositionService.getUserPositions(address);
-        console.log(`Successfully fetched ${positions.length} positions for user ${address}`);
+        // console.log(
+        //   `Successfully fetched ${positions.length} positions for user ${address}`,
+        // );
         logPositionDebugInfo(address, BigInt(positions.length), positions);
         return positions;
       } catch (error) {
-        console.error("Error fetching real position data, falling back to mock:", error);
+        console.error(
+          "Error fetching real position data, falling back to mock:",
+          error,
+        );
 
         // Fallback to mock data if real contract calls fail
         const mockPositions = generateMockLPPositions(address, 3); // Default to 3 mock positions
@@ -136,24 +149,29 @@ export function useUserLPPositions() {
   return {
     positions: positionsQuery.data || [],
     isLoading: positionsQuery.isLoading,
-    error: shouldUseMockData(positionsQuery.error || undefined) ? null : positionsQuery.error,
+    error: shouldUseMockData(positionsQuery.error || undefined)
+      ? null
+      : positionsQuery.error,
     refetch: positionsQuery.refetch,
   };
 }
-
-
 
 // Hook to check if user can join a battle with their LP position
 export function useCanJoinBattle(
   battleId: string | undefined,
   tokenId: string | undefined,
-  battleType: 'range' | 'fee' = 'range'
+  battleType: "range" | "fee" = "range",
 ) {
   return useQuery({
     queryKey: ["canJoinBattle", battleId, tokenId, battleType],
     queryFn: async () => {
-      if (!battleId || !tokenId) return { canJoin: false, reason: "Missing parameters" };
-      return await LPPositionService.canJoinBattle(battleId, tokenId, battleType);
+      if (!battleId || !tokenId)
+        return { canJoin: false, reason: "Missing parameters" };
+      return await LPPositionService.canJoinBattle(
+        battleId,
+        tokenId,
+        battleType,
+      );
     },
     enabled: !!battleId && !!tokenId,
     staleTime: 10000, // 10 seconds

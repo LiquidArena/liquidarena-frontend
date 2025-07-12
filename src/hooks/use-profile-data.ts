@@ -373,7 +373,7 @@ export const useRecentBattles = ({ userAddress }: UseUserBattlesParams) => {
         battle.details?.winner !== "0x0000000000000000000000000000000000000000",
     ).length;
 
-    console.log(lostBattles);
+    // console.log(lostBattles);
 
     return {
       totalBattles,

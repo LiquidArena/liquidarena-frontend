@@ -10,7 +10,7 @@ export default function WhitelistPage() {
   const handleEmailSubmit = async (email: string) => {
     // You can implement custom logic here
     // For example, call your API
-    console.log("Submitting email:", email);
+    // console.log("Submitting email:", email);
 
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));

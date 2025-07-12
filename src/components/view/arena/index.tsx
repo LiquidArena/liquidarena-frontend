@@ -155,8 +155,8 @@ export default function ArenaLobby() {
               </SelectTrigger>
               <SelectContent className="bg-gray-900 border-gray-700 backdrop-blur-xl">
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="waiting">Waiting</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="queued">Waiting</SelectItem>
+                <SelectItem value="onGoing">Active</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -304,8 +304,6 @@ function BattleGrid({
       </div>
     );
   }
-
-  // console.log(battles);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">

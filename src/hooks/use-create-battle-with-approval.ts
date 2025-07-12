@@ -1,16 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadContract } from "wagmi";
-import { Address } from "viem";
+import {
+  FEE_BATTLE_ABI,
+  POSITION_MANAGER_ABI,
+  RANGE_BATTLE_ABI,
+} from "@/contracts/abis";
 import { CONTRACTS } from "@/lib/config";
-import { RANGE_BATTLE_ABI, FEE_BATTLE_ABI, POSITION_MANAGER_ABI } from "@/contracts/abis";
+import { useEffect, useState } from "react";
+import { Address } from "viem";
+import {
+  useAccount,
+  useReadContract,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+
 import { useUserLPPositions } from "./use-lp-positions";
 
 export interface CreateBattleParams {
   tokenId: string;
   duration: number; // in seconds
-  battleType: 'range' | 'fee';
+  battleType: "range" | "fee";
 }
 
 export interface CreateBattleState {
@@ -19,45 +29,47 @@ export interface CreateBattleState {
   isApproving: boolean;
   isApproved: boolean;
   approvalHash: string | null;
-  
+
   // Battle creation step
   isCreating: boolean;
   isSuccess: boolean;
   error: string | null;
   battleId: string | null;
   transactionHash: string | null;
-  
+
   // Current step
-  currentStep: 'checking' | 'approval' | 'creation' | 'complete';
+  currentStep: "checking" | "approval" | "creation" | "complete";
 }
 
 export function useCreateBattleWithApproval() {
   const { address } = useAccount();
   const { positions, refetch: refetchPositions } = useUserLPPositions();
-  
+
   // Separate write contracts for approval and battle creation
-  const { 
-    writeContract: writeApproval, 
-    data: approvalHash, 
-    error: approvalError, 
-    reset: resetApproval 
+  const {
+    writeContract: writeApproval,
+    data: approvalHash,
+    error: approvalError,
+    reset: resetApproval,
   } = useWriteContract();
-  
-  const { 
-    writeContract: writeBattle, 
-    data: battleHash, 
-    error: battleError, 
-    reset: resetBattle 
+
+  const {
+    writeContract: writeBattle,
+    data: battleHash,
+    error: battleError,
+    reset: resetBattle,
   } = useWriteContract();
 
   // Transaction confirmations
-  const { isLoading: isApprovalConfirming, isSuccess: isApprovalSuccess } = useWaitForTransactionReceipt({ 
-    hash: approvalHash 
-  });
-  
-  const { isLoading: isBattleConfirming, isSuccess: isBattleSuccess } = useWaitForTransactionReceipt({ 
-    hash: battleHash 
-  });
+  const { isLoading: isApprovalConfirming, isSuccess: isApprovalSuccess } =
+    useWaitForTransactionReceipt({
+      hash: approvalHash,
+    });
+
+  const { isLoading: isBattleConfirming, isSuccess: isBattleSuccess } =
+    useWaitForTransactionReceipt({
+      hash: battleHash,
+    });
 
   const [state, setState] = useState<CreateBattleState>({
     needsApproval: false,
@@ -69,10 +81,12 @@ export function useCreateBattleWithApproval() {
     error: null,
     battleId: null,
     transactionHash: null,
-    currentStep: 'checking',
+    currentStep: "checking",
   });
 
-  const [currentParams, setCurrentParams] = useState<CreateBattleParams | null>(null);
+  const [currentParams, setCurrentParams] = useState<CreateBattleParams | null>(
+    null,
+  );
 
   // Check if approval is needed for a specific token and battle type
   const { data: currentApproval } = useReadContract({
@@ -88,16 +102,18 @@ export function useCreateBattleWithApproval() {
   // Check if approval is needed
   useEffect(() => {
     if (currentParams && currentApproval !== undefined) {
-      const battleContractAddress = currentParams.battleType === 'range'
-        ? CONTRACTS.RANGE_BATTLE
-        : CONTRACTS.FEE_BATTLE;
+      const battleContractAddress =
+        currentParams.battleType === "range"
+          ? CONTRACTS.RANGE_BATTLE
+          : CONTRACTS.FEE_BATTLE;
 
-      const needsApproval = currentApproval.toLowerCase() !== battleContractAddress.toLowerCase();
+      const needsApproval =
+        currentApproval.toLowerCase() !== battleContractAddress.toLowerCase();
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         needsApproval,
-        currentStep: needsApproval ? 'approval' : 'creation',
+        currentStep: needsApproval ? "approval" : "creation",
       }));
     }
   }, [currentApproval, currentParams]);
@@ -105,12 +121,12 @@ export function useCreateBattleWithApproval() {
   // Handle approval transaction confirmation
   useEffect(() => {
     if (isApprovalSuccess && approvalHash) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isApproving: false,
         isApproved: true,
         approvalHash,
-        currentStep: 'creation',
+        currentStep: "creation",
       }));
     }
   }, [isApprovalSuccess, approvalHash]);
@@ -118,12 +134,12 @@ export function useCreateBattleWithApproval() {
   // Handle battle creation transaction confirmation
   useEffect(() => {
     if (isBattleSuccess && battleHash) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isCreating: false,
         isSuccess: true,
         transactionHash: battleHash,
-        currentStep: 'complete',
+        currentStep: "complete",
         battleId: "pending", // This should be extracted from transaction logs
       }));
 
@@ -135,7 +151,7 @@ export function useCreateBattleWithApproval() {
   // Handle approval errors
   useEffect(() => {
     if (approvalError) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isApproving: false,
         error: `Approval failed: ${approvalError.message}`,
@@ -146,7 +162,7 @@ export function useCreateBattleWithApproval() {
   // Handle battle creation errors
   useEffect(() => {
     if (battleError) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isCreating: false,
         error: `Battle creation failed: ${battleError.message}`,
@@ -156,7 +172,7 @@ export function useCreateBattleWithApproval() {
 
   // Update approving state
   useEffect(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isApproving: isApprovalConfirming,
     }));
@@ -164,7 +180,7 @@ export function useCreateBattleWithApproval() {
 
   // Update creating state
   useEffect(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isCreating: isBattleConfirming,
     }));
@@ -172,34 +188,43 @@ export function useCreateBattleWithApproval() {
 
   const startBattleCreation = async (params: CreateBattleParams) => {
     if (!address) {
-      setState(prev => ({ ...prev, error: "Please connect your wallet" }));
+      setState((prev) => ({ ...prev, error: "Please connect your wallet" }));
       return;
     }
 
     if (!params.tokenId) {
-      setState(prev => ({ ...prev, error: "Please select an LP position" }));
+      setState((prev) => ({ ...prev, error: "Please select an LP position" }));
       return;
     }
 
     if (params.duration < 300) {
-      setState(prev => ({ ...prev, error: "Battle duration must be at least 5 minutes" }));
+      setState((prev) => ({
+        ...prev,
+        error: "Battle duration must be at least 5 minutes",
+      }));
       return;
     }
 
     if (params.duration > 604800) {
-      setState(prev => ({ ...prev, error: "Battle duration cannot exceed 7 days" }));
+      setState((prev) => ({
+        ...prev,
+        error: "Battle duration cannot exceed 7 days",
+      }));
       return;
     }
 
     // Check if user owns the LP position
-    const position = positions.find(p => p.tokenId === params.tokenId);
+    const position = positions.find((p) => p.tokenId === params.tokenId);
     if (!position) {
-      setState(prev => ({ ...prev, error: "You don't own this LP position" }));
+      setState((prev) => ({
+        ...prev,
+        error: "You don't own this LP position",
+      }));
       return;
     }
 
     // Reset state and set current params
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       error: null,
       isSuccess: false,
@@ -207,7 +232,7 @@ export function useCreateBattleWithApproval() {
       transactionHash: null,
       approvalHash: null,
       isApproved: false,
-      currentStep: 'checking',
+      currentStep: "checking",
     }));
 
     setCurrentParams(params);
@@ -217,11 +242,12 @@ export function useCreateBattleWithApproval() {
     if (!currentParams) return;
 
     try {
-      const battleContractAddress = currentParams.battleType === 'range' 
-        ? CONTRACTS.RANGE_BATTLE 
-        : CONTRACTS.FEE_BATTLE;
+      const battleContractAddress =
+        currentParams.battleType === "range"
+          ? CONTRACTS.RANGE_BATTLE
+          : CONTRACTS.FEE_BATTLE;
 
-      console.log(`Approving token ${currentParams.tokenId} for ${currentParams.battleType} battle contract:`, battleContractAddress);
+      // console.log(`Approving token ${currentParams.tokenId} for ${currentParams.battleType} battle contract:`, battleContractAddress);
 
       writeApproval({
         address: CONTRACTS.POSITION_MANAGER as Address,
@@ -229,12 +255,12 @@ export function useCreateBattleWithApproval() {
         functionName: "approve",
         args: [battleContractAddress as Address, BigInt(currentParams.tokenId)],
       });
-
     } catch (error) {
       console.error("Error approving token:", error);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        error: error instanceof Error ? error.message : "Failed to approve token",
+        error:
+          error instanceof Error ? error.message : "Failed to approve token",
       }));
     }
   };
@@ -243,16 +269,20 @@ export function useCreateBattleWithApproval() {
     if (!currentParams) return;
 
     try {
-      const contractAddress = currentParams.battleType === 'range' 
-        ? CONTRACTS.RANGE_BATTLE 
-        : CONTRACTS.FEE_BATTLE;
-      const abi = currentParams.battleType === 'range' ? RANGE_BATTLE_ABI : FEE_BATTLE_ABI;
+      const contractAddress =
+        currentParams.battleType === "range"
+          ? CONTRACTS.RANGE_BATTLE
+          : CONTRACTS.FEE_BATTLE;
+      const abi =
+        currentParams.battleType === "range"
+          ? RANGE_BATTLE_ABI
+          : FEE_BATTLE_ABI;
 
-      console.log(`Creating ${currentParams.battleType} battle with:`, {
-        tokenId: currentParams.tokenId,
-        duration: currentParams.duration,
-        contractAddress,
-      });
+      // console.log(`Creating ${currentParams.battleType} battle with:`, {
+      //   tokenId: currentParams.tokenId,
+      //   duration: currentParams.duration,
+      //   contractAddress,
+      // });
 
       writeBattle({
         address: contractAddress as Address,
@@ -260,12 +290,12 @@ export function useCreateBattleWithApproval() {
         functionName: "createBattle",
         args: [BigInt(currentParams.tokenId), BigInt(currentParams.duration)],
       });
-
     } catch (error) {
       console.error("Error creating battle:", error);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        error: error instanceof Error ? error.message : "Failed to create battle",
+        error:
+          error instanceof Error ? error.message : "Failed to create battle",
       }));
     }
   };
@@ -281,7 +311,7 @@ export function useCreateBattleWithApproval() {
       error: null,
       battleId: null,
       transactionHash: null,
-      currentStep: 'checking',
+      currentStep: "checking",
     });
     setCurrentParams(null);
     resetApproval();
@@ -294,11 +324,11 @@ export function useCreateBattleWithApproval() {
     approveToken,
     createBattle,
     resetState,
-    
+
     // State
     state,
     currentParams,
-    
+
     // Convenience flags
     needsApproval: state.needsApproval,
     isApproving: state.isApproving,

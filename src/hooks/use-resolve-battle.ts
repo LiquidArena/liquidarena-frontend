@@ -1,29 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
-import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { Address } from "viem";
-import { CONTRACTS } from "@/lib/config";
 import { RANGE_BATTLE_ABI } from "@/contracts/abis";
+import { CONTRACTS } from "@/lib/config";
+import React, { useState } from "react";
+import { Address } from "viem";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
 export function useResolveBattle() {
   const [isResolving, setIsResolving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { 
-    writeContract, 
-    data: transactionHash, 
-    error: writeError 
+  const {
+    writeContract,
+    data: transactionHash,
+    error: writeError,
   } = useWriteContract();
 
-  const { 
-    isLoading: isConfirming, 
-    isSuccess 
-  } = useWaitForTransactionReceipt({ 
-    hash: transactionHash 
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: transactionHash,
   });
 
-  const resolveBattle = async (battleId: string, resolutionType: 'range' | 'fee' = 'range') => {
+  const resolveBattle = async (
+    battleId: string,
+    resolutionType: "range" | "fee" = "range",
+  ) => {
     if (!battleId) {
       setError("Battle ID is required");
       return;
@@ -33,12 +33,13 @@ export function useResolveBattle() {
       setIsResolving(true);
       setError(null);
 
-      console.log(`Resolving ${resolutionType} battle:`, battleId);
+      // console.log(`Resolving ${resolutionType} battle:`, battleId);
 
       // Use the range battle contract (adjust if you need fee battle support)
-      const contractAddress = resolutionType === 'range' 
-        ? CONTRACTS.RANGE_BATTLE 
-        : CONTRACTS.FEE_BATTLE;
+      const contractAddress =
+        resolutionType === "range"
+          ? CONTRACTS.RANGE_BATTLE
+          : CONTRACTS.FEE_BATTLE;
 
       writeContract({
         address: contractAddress as Address,
@@ -46,7 +47,6 @@ export function useResolveBattle() {
         functionName: "resolveBattle",
         args: [BigInt(battleId)],
       });
-
     } catch (err) {
       console.error("Error resolving battle:", err);
       setError(err instanceof Error ? err.message : "Failed to resolve battle");

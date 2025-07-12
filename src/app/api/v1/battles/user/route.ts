@@ -27,9 +27,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(
-      `Fetching battles for user: ${userAddress} from contract: ${contractAddress}`,
-    );
+    // console.log(
+    //   `Fetching battles for user: ${userAddress} from contract: ${contractAddress}`,
+    // );
 
     try {
       // Select the appropriate ABI based on battle type

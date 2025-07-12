@@ -1,16 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadContract } from "wagmi";
-import { Address } from "viem";
+import {
+  FEE_BATTLE_ABI,
+  POSITION_MANAGER_ABI,
+  RANGE_BATTLE_ABI,
+} from "@/contracts/abis";
 import { CONTRACTS } from "@/lib/config";
-import { RANGE_BATTLE_ABI, FEE_BATTLE_ABI, POSITION_MANAGER_ABI } from "@/contracts/abis";
+import { useEffect, useState } from "react";
+import { Address } from "viem";
+import {
+  useAccount,
+  useReadContract,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+
 import { useUserLPPositions } from "./use-lp-positions";
 
 export interface CreateBattleParams {
   tokenId: string;
   duration: number; // in seconds
-  battleType: 'range' | 'fee';
+  battleType: "range" | "fee";
 }
 
 export interface CreateBattleState {
@@ -28,14 +38,21 @@ export interface CreateBattleState {
   transactionHash: string | null;
 
   // Current step
-  currentStep: 'approval' | 'creation' | 'complete';
+  currentStep: "approval" | "creation" | "complete";
 }
 
 export function useCreateBattle() {
   const { address } = useAccount();
   const { positions, refetch: refetchPositions } = useUserLPPositions();
-  const { writeContract, data: hash, error: writeError, reset } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const {
+    writeContract,
+    data: hash,
+    error: writeError,
+    reset,
+  } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
 
   const [state, setState] = useState<CreateBattleState>({
     needsApproval: false,
@@ -47,56 +64,71 @@ export function useCreateBattle() {
     error: null,
     battleId: null,
     transactionHash: null,
-    currentStep: 'approval',
+    currentStep: "approval",
   });
 
   const createBattle = async (params: CreateBattleParams) => {
     if (!address) {
-      setState(prev => ({ ...prev, error: "Please connect your wallet" }));
+      setState((prev) => ({ ...prev, error: "Please connect your wallet" }));
       return;
     }
 
     if (!params.tokenId) {
-      setState(prev => ({ ...prev, error: "Please select an LP position" }));
+      setState((prev) => ({ ...prev, error: "Please select an LP position" }));
       return;
     }
 
-    if (params.duration < 300) { // 5 minutes minimum
-      setState(prev => ({ ...prev, error: "Battle duration must be at least 5 minutes" }));
+    if (params.duration < 300) {
+      // 5 minutes minimum
+      setState((prev) => ({
+        ...prev,
+        error: "Battle duration must be at least 5 minutes",
+      }));
       return;
     }
 
-    if (params.duration > 604800) { // 7 days maximum
-      setState(prev => ({ ...prev, error: "Battle duration cannot exceed 7 days" }));
+    if (params.duration > 604800) {
+      // 7 days maximum
+      setState((prev) => ({
+        ...prev,
+        error: "Battle duration cannot exceed 7 days",
+      }));
       return;
     }
 
     // Check if user owns the LP position
-    const position = positions.find(p => p.tokenId === params.tokenId);
+    const position = positions.find((p) => p.tokenId === params.tokenId);
     if (!position) {
-      setState(prev => ({ ...prev, error: "You don't own this LP position" }));
+      setState((prev) => ({
+        ...prev,
+        error: "You don't own this LP position",
+      }));
       return;
     }
 
     try {
-      setState(prev => ({ 
-        ...prev, 
-        isCreating: true, 
+      setState((prev) => ({
+        ...prev,
+        isCreating: true,
         error: null,
         isSuccess: false,
         battleId: null,
-        transactionHash: null
+        transactionHash: null,
       }));
 
-      const contractAddress = params.battleType === 'range' ? CONTRACTS.RANGE_BATTLE : CONTRACTS.FEE_BATTLE;
-      const abi = params.battleType === 'range' ? RANGE_BATTLE_ABI : FEE_BATTLE_ABI;
+      const contractAddress =
+        params.battleType === "range"
+          ? CONTRACTS.RANGE_BATTLE
+          : CONTRACTS.FEE_BATTLE;
+      const abi =
+        params.battleType === "range" ? RANGE_BATTLE_ABI : FEE_BATTLE_ABI;
 
-      console.log(`Creating ${params.battleType} battle with:`, {
-        tokenId: params.tokenId,
-        duration: params.duration,
-        contractAddress,
-        position
-      });
+      // console.log(`Creating ${params.battleType} battle with:`, {
+      //   tokenId: params.tokenId,
+      //   duration: params.duration,
+      //   contractAddress,
+      //   position
+      // });
 
       writeContract({
         address: contractAddress as Address,
@@ -104,13 +136,13 @@ export function useCreateBattle() {
         functionName: "createBattle",
         args: [BigInt(params.tokenId), BigInt(params.duration)],
       });
-
     } catch (error) {
       console.error("Error creating battle:", error);
-      setState(prev => ({ 
-        ...prev, 
-        isCreating: false, 
-        error: error instanceof Error ? error.message : "Failed to create battle" 
+      setState((prev) => ({
+        ...prev,
+        isCreating: false,
+        error:
+          error instanceof Error ? error.message : "Failed to create battle",
       }));
     }
   };
@@ -118,14 +150,14 @@ export function useCreateBattle() {
   // Update state when transaction is confirmed
   useEffect(() => {
     if (isSuccess && hash) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isCreating: false,
         isSuccess: true,
         transactionHash: hash,
         // Note: We would need to parse the transaction receipt to get the actual battle ID
         // For now, we'll set it to a placeholder
-        battleId: "pending" // This should be extracted from the transaction logs
+        battleId: "pending", // This should be extracted from the transaction logs
       }));
 
       // Refetch positions since one was used to create a battle
@@ -136,19 +168,19 @@ export function useCreateBattle() {
   // Update state when there's a write error
   useEffect(() => {
     if (writeError) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isCreating: false,
-        error: writeError.message || "Failed to create battle"
+        error: writeError.message || "Failed to create battle",
       }));
     }
   }, [writeError]);
 
   // Update creating state based on confirmation status
   useEffect(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      isCreating: isConfirming
+      isCreating: isConfirming,
     }));
   }, [isConfirming]);
 
@@ -163,7 +195,7 @@ export function useCreateBattle() {
       error: null,
       battleId: null,
       transactionHash: null,
-      currentStep: 'approval',
+      currentStep: "approval",
     });
     reset();
   };
@@ -187,9 +219,9 @@ export function useAvailableBattlePositions() {
 
   // Filter positions that can be used for battles
   // Hide closed positions (positions with 0 liquidity)
-  const availablePositions = positions.filter(position => {
+  const availablePositions = positions.filter((position) => {
     // Only show positions with active liquidity
-    const liquidity = BigInt(position.liquidity || '0');
+    const liquidity = BigInt(position.liquidity || "0");
     return liquidity > 0n;
   });
 
@@ -225,6 +257,6 @@ export function formatDuration(seconds: number): string {
 
 // Utility function to get duration description
 export function getDurationDescription(seconds: number): string {
-  const duration = BATTLE_DURATIONS.find(d => d.value === seconds);
+  const duration = BATTLE_DURATIONS.find((d) => d.value === seconds);
   return duration?.description || "Custom duration";
 }

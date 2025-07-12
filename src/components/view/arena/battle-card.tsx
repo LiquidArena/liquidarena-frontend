@@ -3,13 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import GradientLine from "@/components/ui/cards/gradient-line";
 import { GradientLink } from "@/components/ui/gradient-button";
+import { useCompleteBattleDetails } from "@/hooks/use-battle-contract";
+import { useResolveBattle } from "@/hooks/use-resolve-battle";
 import { BattleData, ContractBattleStatus } from "@/types/arena";
 import { formatAddress, formatDuration, formatUSDValue } from "@/utils/arena";
-import { Clock, Coins, Sword, Target, Users, Loader2, Gavel } from "lucide-react";
+import {
+  Clock,
+  Coins,
+  Gavel,
+  Loader2,
+  Sword,
+  Target,
+  Users,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
-import { useResolveBattle } from "@/hooks/use-resolve-battle";
-import { useCompleteBattleDetails } from "@/hooks/use-battle-contract";
 
 interface BattleCardProps {
   battle: BattleData;
@@ -25,8 +33,8 @@ const isBattleExpired = (startTime: number, duration: number): boolean => {
 
 // Helper function to get badge styling and text
 const getBattleStatusDisplay = (
-  status: ContractBattleStatus | string, 
-  isExpired: boolean = false
+  status: ContractBattleStatus | string,
+  isExpired: boolean = false,
 ) => {
   // If battle is expired but still active, show ready to resolve
   if (isExpired && (status === "active" || status === "onGoing")) {
@@ -81,53 +89,65 @@ const getBattleStatusDisplay = (
 
 export const BattleCard: React.FC<BattleCardProps> = ({ battle }) => {
   const router = useRouter();
-  const { resolveBattle, isResolving, isSuccess: resolveSuccess, error: resolveError } = useResolveBattle();
-  
+  const {
+    resolveBattle,
+    isResolving,
+    isSuccess: resolveSuccess,
+    error: resolveError,
+  } = useResolveBattle();
+
   // Local state to track if battle has been resolved
   const [localStatus, setLocalStatus] = React.useState(battle.status);
-  
+
   // Get complete battle details to check expiration
-  const { battleDetails: completeBattleDetails } = useCompleteBattleDetails(battle.battleId);
-  
+  const { battleDetails: completeBattleDetails } = useCompleteBattleDetails(
+    battle.battleId,
+  );
+
   // Check if battle is expired
-  const isExpired = completeBattleDetails 
-    ? isBattleExpired(completeBattleDetails.startTime, completeBattleDetails.duration)
+  const isExpired = completeBattleDetails
+    ? isBattleExpired(
+        completeBattleDetails.startTime,
+        completeBattleDetails.duration,
+      )
     : false;
-  
+
   // Update local status when resolve is successful
   React.useEffect(() => {
     if (resolveSuccess) {
       setLocalStatus("ended");
     }
   }, [resolveSuccess]);
-  
+
   const statusDisplay = getBattleStatusDisplay(localStatus, isExpired);
-  
+
   // Debug logs for all battles to check status detection
-  console.log(`Battle ${battle.battleId} Debug:`, {
-    originalStatus: battle.status,
-    localStatus,
-    isExpired,
-    statusDisplay,
-    canResolve: statusDisplay.canResolve,
-    canJoin: statusDisplay.canJoin,
-    completeBattleDetails: completeBattleDetails ? {
-      status: completeBattleDetails.status,
-      startTime: completeBattleDetails.startTime,
-      duration: completeBattleDetails.duration
-    } : null
-  });
+  // console.log(`Battle ${battle.battleId} Debug:`, {
+  //   originalStatus: battle.status,
+  //   localStatus,
+  //   isExpired,
+  //   statusDisplay,
+  //   canResolve: statusDisplay.canResolve,
+  //   canJoin: statusDisplay.canJoin,
+  //   completeBattleDetails: completeBattleDetails ? {
+  //     status: completeBattleDetails.status,
+  //     startTime: completeBattleDetails.startTime,
+  //     duration: completeBattleDetails.duration
+  //   } : null
+  // });
 
   const handleJoinBattle = () => {
     // Navigate to battle page with battleId and required stake value
-    router.push(`/arena/battle/${battle.battleId}?requiredStake=${battle.totalValueUSD}&join=true`);
+    router.push(
+      `/arena/battle/${battle.battleId}?requiredStake=${battle.totalValueUSD}&join=true`,
+    );
   };
 
   const handleResolveBattle = async () => {
     try {
-      console.log("🔥 End Battle clicked for battle:", battle.battleId);
+      // console.log("🔥 End Battle clicked for battle:", battle.battleId);
       alert(`Ending battle ${battle.battleId}...`);
-      await resolveBattle(battle.battleId, 'range');
+      await resolveBattle(battle.battleId, "range");
     } catch (error) {
       console.error("Failed to resolve battle:", error);
       alert(`Failed to end battle: ${error}`);
@@ -206,9 +226,7 @@ export const BattleCard: React.FC<BattleCardProps> = ({ battle }) => {
 
         {resolveError && (
           <div className="mb-2 p-2 bg-red-900/20 border border-red-400/30 rounded-lg">
-            <div className="text-red-400 text-xs">
-              Error: {resolveError}
-            </div>
+            <div className="text-red-400 text-xs">Error: {resolveError}</div>
           </div>
         )}
 
